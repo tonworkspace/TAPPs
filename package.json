@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://tonworkspace.github.io/ton-staking-ui/",
+  "homepage": "https://github.com/tonworkspace/TAPPs/",
   "scripts": {
     "deploy": "gh-pages -d dist",
     "dev": "vite",
