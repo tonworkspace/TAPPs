@@ -1,7 +1,7 @@
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { toUserFriendlyAddress } from '@tonconnect/sdk';
 import { FC, useState, useEffect, useRef } from 'react';
-import { FaUserPlus, FaGem } from 'react-icons/fa';
+import { FaGem } from 'react-icons/fa';
 // import { BiNetworkChart } from 'react-icons/bi';
 import { AiOutlineHome } from 'react-icons/ai';
 import { TonConnectButton, } from '@tonconnect/ui-react';
@@ -13,7 +13,7 @@ import TonWeb from 'tonweb';
 import { Button } from '@telegram-apps/telegram-ui';
 import { Snackbar } from '@telegram-apps/telegram-ui';
 import ReferralSystem from '@/components/ReferralSystem';
-import TokenLaunchpad from '@/components/TokenLaunchpad';
+// import TokenLaunchpad from '@/components/TokenLaunchpad';
 import { WithdrawalInfoModal } from '@/components/WithdrawalInfoModal';
 import { BsCoin } from 'react-icons/bs';
 import { GiScrollUnfurled } from 'react-icons/gi';
@@ -24,6 +24,7 @@ import { NFTMinter } from '@/components/NFTMinter';
 import ArcadeMiningUI from '@/components/ArcadeMiningUI';
 import WithdrawModal from '@/components/WithdrawModal';
 import NewsComponent from '@/components/NewsComponent';
+import TonWallet from '@/components/TonWallet';
 
 // Add this at the top of your file with other constants
 
@@ -2377,7 +2378,7 @@ const handleDeposit = async (amount: number) => {
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             {/* Content */}
             <div className="relative">
-              <TokenLaunchpad />
+              <TonWallet />
             </div>
           </div>
         )}
@@ -2734,12 +2735,12 @@ const handleDeposit = async (amount: number) => {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent pointer-events-none"></div>
         
         <div className="max-w-lg mx-auto px-4 relative">
-          <div className="grid grid-cols-5 items-center py-2">
+          <div className="grid grid-cols-4 items-center py-2">
             {[
               { id: 'home', text: 'Main', Icon: AiOutlineHome },
               { id: 'tasks', text: 'Tasks', Icon: GiScrollUnfurled },
               { id: 'airdrop', text: 'Airdrop', Icon: FaGem },
-              { id: 'network', text: 'Network', Icon: FaUserPlus },
+              // { id: 'network', text: 'Network', Icon: FaUserPlus },
               { id: 'token', text: 'Token', Icon: BsCoin },
             ].map(({ id, text, Icon }) => (
               <button 
