@@ -105,6 +105,7 @@ const ReferralSystem = () => {
   // });
   const { user } = useAuth();
   const [referralLink, setReferralLink] = useState<string>('');
+  const [referralCode, setReferralCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [, setTotalCount] = useState<number>(0);
@@ -135,6 +136,10 @@ const ReferralSystem = () => {
   const [tree, setTree] = useState<TreeData>({ upline: null, downline: [] });
 
   const [isTreeLoading, setIsTreeLoading] = useState(false);
+
+  // UI state for apply-by-code
+  const [applyCode, setApplyCode] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
 
   const loadTree = async () => {
     if (!user?.id) return;
@@ -178,6 +183,7 @@ const ReferralSystem = () => {
       console.log("User ID detected:", user.id);
       console.log("User object:", user);
       setReferralLink(`https://t.me/stakenova_bot?startapp=${user.telegram_id}`);
+      setReferralCode(String(user.telegram_id || user.id));
     } else {
       console.log("No user ID available in first useEffect");
     }
@@ -663,7 +669,7 @@ const ReferralSystem = () => {
     <div className="p-2 rounded-lg">
       <div className="mx-auto">
         {/* Tab Navigation */}         
-        <div className="flex relative mb-4 relative bg-black/30  rounded-xl border border-blue-500/20 shadow-lg rounded-xl p-1">
+        <div className="flex relative mb-4 bg-white rounded-xl border border-slate-200 shadow-sm p-1">
          {/* Animated Corner Decorations */}
          <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-blue-400/50" />
           <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-blue-400/50" />
@@ -674,8 +680,8 @@ const ReferralSystem = () => {
             onClick={() => setActiveTab('my-referrals')}
             className={`flex-1 py-2 rounded-lg text-center transition-all ${
               activeTab === 'my-referrals'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             My Referrals
@@ -684,8 +690,8 @@ const ReferralSystem = () => {
             onClick={() => setActiveTab('statistics')}
             className={`flex-1 py-2 rounded-lg text-center transition-all ${
               activeTab === 'statistics'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Global Ranks
@@ -694,18 +700,35 @@ const ReferralSystem = () => {
 
         {activeTab === 'my-referrals' ? (
           <>
-            {/* Header */}
-            <div className="mb-4 text-center">
-              <div className="mb-2">
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 
-                  bg-clip-text text-transparent">🚀 YOUR REFERRALS 🚀</span>
+            {/* Invite & Apply */}
+            <div className="grid grid-cols-1 gap-3 mb-4">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Your Referral Link</div>
+                    <div className="text-sm text-slate-900 truncate max-w-[240px] sm:max-w-none">{referralLink || 'Loading link...'}</div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button onClick={() => navigator.clipboard.writeText(referralLink)} className="px-3 py-1.5 rounded-md text-xs bg-slate-100 border border-slate-200 text-slate-700">Copy</button>
+                      <button onClick={async()=>{try{if((navigator as any).share){await (navigator as any).share({title:'TAPPs Invite',text:`Join TAPPs with my link: ${referralLink}`,url:referralLink});}else{await navigator.clipboard.writeText(referralLink);}}catch{}}} className="px-3 py-1.5 rounded-md text-xs bg-blue-600 text-white">Share</button>
               </div>
-              <p className="text-gray-400 text-sm">Track your referral network and earnings!</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Your Code</div>
+                    <div className="text-lg font-semibold text-slate-900">{referralCode}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Have a Code?</div>
+                <div className="flex items-center gap-2">
+                  <input onChange={(e)=>{(e as any).target&&setApplyCode((e as any).target.value)}} placeholder="Enter referral code" className="flex-1 px-3 py-2 rounded-md border border-slate-200 text-sm outline-none focus:border-blue-400" />
+                  <button onClick={async()=>{if(!user?.id||!applyCode.trim())return;try{setIsApplying(true);if(applyCode===String(user.telegram_id)||applyCode===String(user.id)){alert('You cannot use your own code.');return;}const { data: existing } = await supabase.from('referrals').select('*').eq('referred_id', user.id).maybeSingle();if(existing){alert('Referral already set.');return;}const codeNum=Number(applyCode);const { data: referrer } = await supabase.from('users').select('id').or(`telegram_id.eq.${codeNum},id.eq.${codeNum}`).maybeSingle();if(!referrer){alert('Invalid referral code.');return;}const { error: insertErr } = await supabase.from('referrals').insert({ referrer_id: referrer.id, referred_id: user.id, status: 'active' });if(insertErr)throw insertErr;alert('Referral code applied!');}catch(e){console.error(e);alert('Failed to apply code');}finally{setIsApplying(false);}}} className="px-3 py-2 rounded-md bg-blue-600 text-white text-sm disabled:opacity-60" disabled={isApplying}>{isApplying ? 'Applying…' : 'Apply'}</button>
+                </div>
+              </div>
             </div>
 
             {/* Stats Card */}
-            <div className="relative backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl
-              bg-gradient-to-b from-[#1a1c2e]/80 to-[#0d0f1d]/80 group hover:scale-[1.01] transition-all duration-300">
+            <div className="relative rounded-2xl p-6 border border-slate-200 shadow-sm bg-white">
               {/* Corner accents */}
               <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80" />
               <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/80" />
@@ -763,23 +786,22 @@ const ReferralSystem = () => {
               <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400/80" />
               <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400/80" />
 
-              <p className="text-xs text-gray-400 mb-2">Your Referral Link:</p>
-              <div className="flex items-center bg-white/5 rounded-xl p-3 border border-white/10">
-                <div className="overflow-hidden overflow-ellipsis whitespace-nowrap text-gray-300 text-sm flex-1">
+              <p className="text-xs text-slate-600 mb-2">Your Referral Link:</p>
+              <div className="flex items-center bg-slate-50 rounded-xl p-3 border border-slate-200">
+                <div className="overflow-hidden overflow-ellipsis whitespace-nowrap text-slate-900 text-sm flex-1">
                   {referralLink || 'Loading link...'}
                 </div>
                 <button
                   onClick={() => navigator.clipboard.writeText(referralLink)}
-                  className="ml-2 bg-blue-500/20 p-2 rounded-lg hover:bg-blue-500/30 transition-colors duration-300"
+                  className="ml-2 bg-blue-50 p-2 rounded-lg hover:bg-blue-100 transition-colors duration-200 border border-blue-200"
                 >
-                  <FaCopy className="text-blue-400 text-sm" />
+                  <FaCopy className="text-blue-700 text-sm" />
                 </button>
               </div>
             </div>
 
             {/* Referral Network Card */}
-            <div className="relative backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl mt-4
-              bg-gradient-to-b from-[#1a1c2e]/80 to-[#0d0f1d]/80 group hover:scale-[1.01] transition-all duration-300">
+            <div className="relative rounded-2xl p-6 border border-slate-200 shadow-sm mt-4 bg-white">
               {/* Corner accents */}
               <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80" />
               <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/80" />

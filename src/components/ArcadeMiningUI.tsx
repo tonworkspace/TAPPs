@@ -27,7 +27,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
     cooldownText,
     onClaim,
     onOpenDeposit,
-    // onOpenWithdraw,
+    onOpenWithdraw,
     airdropBalanceNova,
     potentialEarningsTon,
     totalWithdrawnTon,
@@ -240,23 +240,24 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                 )}
               </div>
             </button>
-           
-            {/* <button
-              onClick={onOpenWithdraw}
-              disabled={!isStaked || !onOpenWithdraw || totalWithdrawnTon <= 0}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-colors duration-200 ${
-                isStaked && onOpenWithdraw && totalWithdrawnTon > 0
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'bg-slate-100 text-slate-400 border border-slate-200'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-              </svg>
-              <span>Withdraw TAPPS</span>
-              </div>
-            </button> */}
+            {isStaked && (
+              <button
+                onClick={onOpenWithdraw}
+                disabled={!onOpenWithdraw || totalWithdrawnTon <= 0}
+                className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-colors duration-200 ${
+                  onOpenWithdraw && totalWithdrawnTon > 0
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-slate-100 text-slate-400 border border-slate-200'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                  </svg>
+                  <span>Withdraw TAPPS</span>
+                </div>
+              </button>
+            )}
           </div>
 
           {/* Compact Footer Info */}

@@ -29,64 +29,46 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
   const [isClaimingAllRewards, setIsClaimingAllRewards] = useState(false);
   const [allTasksCompleted, setAllTasksCompleted] = useState(false);
   const [hasClaimedAllRewards, setHasClaimedAllRewards] = useState(false);
-  const [compact, setCompact] = useState(true);
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
     setTasks([
       {
         id: 1,
         platform: 'Telegram',
-        action: 'Join StakeNova Telegram Group',
-        reward: 100,
-        link: 'https://t.me/StakeNova_Community',
+        action: 'Join TAPPS Telegram Group',
+        reward: 10000,
+        link: 'https://t.me/TAPPs_Chat',
         isCompleted: false,
         description: 'Join our vibrant community and stay updated!'
       },
       {
         id: 2,
         platform: 'Telegram',
-        action: 'Join StakeNova Telegram Channel',
-        reward: 500,
-        link: 'https://t.me/StakeNova_Channel',
+        action: 'Join TAPPS Telegram Channel',
+        reward: 10000,
+        link: 'https://t.me/TAPPs_News',
         isCompleted: false,
         description: 'Stay connected with the latest updates!'
       },
       {
         id: 3,
         platform: 'Twitter',
-        action: 'Follow StakeNova on X',
-        reward:100,
-        link: 'https://x.com/StakeNova_web3',
+        action: 'Follow TAPPS on X',
+        reward:10000,
+        link: 'https://x.com/TAPP_Whale',
         isCompleted: false,
         description: 'Follow us on X for the latest news and updates!'
       },
       {
         id: 4,
         platform: 'Facebook',
-        action: 'Like StakeNova Facebook Page',
-        reward: 250,
-        link: 'https://www.facebook.com/stakenovacommunity',
+        action: 'Like TAPPS Facebook Page',
+        reward: 10000,
+        link: 'https://web.facebook.com/TAPPsWeb3',
         isCompleted: false,
         description: 'Show your support by liking our Facebook page!'
       },
-      {
-        id: 5,
-        platform: 'Medium',
-        action: 'Follow StakeNova Medium Blog',
-        reward: 500,
-        link: 'https://medium.com/@stakenova',
-        isCompleted: false,
-        description: 'Stay informed with our Medium blog!'
-      },
-      {
-        id: 6,
-        platform: 'Youtube',
-        action: 'Subscribe to StakeNova Youtube Channel',
-        reward: 500,
-        link: 'https://www.youtube.com/@StakeNova_Community',
-        isCompleted: false,
-        description: 'Subscribe to our YouTube channel for video content!'
-      }
     ]);
   }, []);
 
@@ -422,46 +404,40 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
         {/* Header skeleton */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-6">
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-xl animate-pulse"></div>
-            <div className="h-6 w-32 bg-blue-500/10 rounded-md animate-pulse"></div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-200 rounded-xl animate-pulse"></div>
+            <div className="h-6 w-32 bg-slate-200 rounded-md animate-pulse"></div>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="h-8 w-36 bg-blue-500/10 rounded-md animate-pulse"></div>
-            <div className="h-8 w-10 bg-blue-500/10 rounded-md animate-pulse"></div>
+            <div className="h-8 w-36 bg-slate-200 rounded-md animate-pulse"></div>
+            <div className="h-8 w-10 bg-slate-200 rounded-md animate-pulse"></div>
           </div>
         </div>
         
         {/* Task card skeletons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="relative backdrop-blur-xl rounded-2xl p-6 border border-white/10 
-              bg-gradient-to-b from-[#1a1c2e]/50 to-[#0d0f1d]/50">
-              {/* Corner accents */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/30" />
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/30" />
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400/30" />
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400/30" />
+            <div key={i} className="relative rounded-2xl p-6 border border-slate-200 bg-white shadow-sm">
               
               {/* Task Header skeleton */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 animate-pulse"></div>
-                  <div className="h-6 w-24 bg-blue-500/10 rounded-md animate-pulse"></div>
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 animate-pulse"></div>
+                  <div className="h-6 w-24 bg-slate-200 rounded-md animate-pulse"></div>
                 </div>
-                <div className="h-6 w-20 bg-green-500/10 rounded-md animate-pulse"></div>
+                <div className="h-6 w-20 bg-slate-200 rounded-md animate-pulse"></div>
               </div>
               
               {/* Task Content skeleton */}
               <div className="space-y-4">
                 <div>
-                  <div className="h-5 w-3/4 bg-blue-500/10 rounded-md animate-pulse mb-3"></div>
-                  <div className="h-4 w-full bg-blue-500/10 rounded-md animate-pulse"></div>
+                  <div className="h-5 w-3/4 bg-slate-200 rounded-md animate-pulse mb-3"></div>
+                  <div className="h-4 w-full bg-slate-200 rounded-md animate-pulse"></div>
                 </div>
                 
                 {/* Task Actions skeleton */}
                 <div className="flex items-center gap-3 mt-4">
-                  <div className="h-10 w-full bg-blue-500/10 rounded-lg animate-pulse"></div>
-                  <div className="h-10 w-full bg-blue-500/10 rounded-lg animate-pulse"></div>
+                  <div className="h-10 w-full bg-slate-200 rounded-lg animate-pulse"></div>
+                  <div className="h-10 w-full bg-slate-200 rounded-lg animate-pulse"></div>
                 </div>
               </div>
             </div>
@@ -469,13 +445,13 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
         </div>
         
         {/* Progress bar skeleton */}
-        <div className="p-4 bg-black/20 rounded-xl border border-blue-500/10">
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
           <div className="flex items-center justify-between mb-2">
-            <div className="h-4 w-24 bg-blue-500/10 rounded-md animate-pulse"></div>
-            <div className="h-4 w-20 bg-blue-500/10 rounded-md animate-pulse"></div>
+            <div className="h-4 w-24 bg-slate-200 rounded-md animate-pulse"></div>
+            <div className="h-4 w-20 bg-slate-200 rounded-md animate-pulse"></div>
           </div>
-          <div className="h-2 bg-blue-900/10 rounded-full overflow-hidden">
-            <div className="h-full w-1/3 bg-blue-500/20 rounded-full animate-pulse"></div>
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-full w-1/3 bg-blue-500 rounded-full animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -486,13 +462,13 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
     <div className={compact ? "space-y-3" : "space-y-6"}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <span className="text-sm font-semibold text-white/90">Daily Social Tasks</span>
-          <span className="text-xs text-white/50 px-2 py-0.5 rounded bg-white/5 border border-white/10">
+          <span className="text-sm font-semibold text-slate-900">Daily Social Tasks</span>
+          <span className="text-xs text-slate-600 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">
             {tasks.filter(t => !t.isCompleted).length > 0 ? `${tasks.filter(t => !t.isCompleted).length} left` : 'All done'}
           </span>
         </div>
@@ -501,14 +477,14 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
             <button
               onClick={handleClaimAllRewards}
               disabled={isClaimingAllRewards}
-              className="px-3 py-1.5 rounded-md text-xs font-medium bg-gradient-to-r from-pink-500 to-purple-500 text-white"
+              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isClaimingAllRewards ? 'Claiming…' : 'Claim 25,000 NOVA'}
             </button>
           )}
           <button
             onClick={() => setCompact(v => !v)}
-            className="px-2.5 py-1.5 rounded-md text-xs bg-white/5 border border-white/10 text-white/70"
+            className="px-2.5 py-1.5 rounded-md text-xs bg-slate-100 border border-slate-200 text-slate-700"
           >
             {compact ? 'Comfortable' : 'Compact'}
           </button>
@@ -520,24 +496,22 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
           <button
             onClick={handleClaimAllRewards}
             disabled={isClaimingAllRewards}
-            className="w-full flex items-center justify-between p-4 rounded-xl 
-              bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600
-              text-white font-medium transition-all duration-300 shadow-lg shadow-purple-500/20"
+            className="w-full flex items-center justify-between p-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all duration-200 shadow-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
               </div>
               <div className="text-left">
-                <div className="font-medium">Claim Bonus Reward!</div>
+                <div className="font-semibold">Claim Bonus Reward!</div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center mr-1">
+                  <div className="w-4 h-4 rounded-full bg-yellow-300 flex items-center justify-center mr-1">
                     <span className="text-xs text-black font-bold">+</span>
                   </div>
-                  <span className="text-yellow-400 text-sm font-medium">25,000 NOVA</span>
+                  <span className="text-yellow-200 text-sm font-medium">25,000 TAPPS</span>
                 </div>
               </div>
             </div>
@@ -556,16 +530,16 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
 
       {/* Already claimed message */}
       {allTasksCompleted && hasClaimedAllRewards && !compact && (
-        <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+        <div className="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-medium text-white/90">All Tasks Completed!</h4>
-              <p className="text-xs text-white/60">You've claimed your 25,000 NOVA bonus reward.</p>
+              <h4 className="text-sm font-medium text-slate-900">All Tasks Completed!</h4>
+              <p className="text-xs text-slate-600">You've claimed your 25,000 TAPPS bonus reward.</p>
             </div>
           </div>
         </div>
@@ -573,16 +547,16 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
 
       {/* Optional: Add a motivational message */}
       {tasks.filter(t => !t.isCompleted).length > 0 && !compact && (
-        <div className="mb-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+        <div className="mb-6 p-4 rounded-lg bg-slate-50 border border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-medium text-white/90">Boost Your Earnings!</h4>
-              <p className="text-xs text-white/60">Complete all tasks to maximize rewards.</p>
+              <h4 className="text-sm font-medium text-slate-900">Boost Your Earnings!</h4>
+              <p className="text-xs text-slate-600">Complete all tasks to maximize rewards.</p>
             </div>
           </div>
         </div>
@@ -593,24 +567,24 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
           <div
             key={task.id}
             className={compact
-              ? `flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2`
-              : `relative backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-2xl bg-gradient-to-b from-[#1a1c2e]/80 to-[#0d0f1d]/80 group hover:scale-[1.01] transition-all duration-300`}
+              ? `flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2`
+              : `relative rounded-2xl p-6 border border-slate-200 shadow-sm bg-white`}
           >
             {compact ? (
               <>
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${task.isCompleted ? 'bg-green-500/20' : 'bg-blue-500/20'}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${task.isCompleted ? 'bg-emerald-50' : 'bg-blue-50'}`}>
                     {getPlatformIcon(task.platform)}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs text-white/70 truncate">{task.action}</div>
-                    <div className="text-[10px] text-white/40 truncate">{task.platform}</div>
+                    <div className="text-xs text-slate-800 truncate">{task.action}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{task.platform}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-400 whitespace-nowrap">+{task.reward} NOVA</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 whitespace-nowrap">+{task.reward} NOVA</span>
                   {task.isCompleted ? (
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">Done</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">Done</span>
                   ) : (
                     <div className="flex items-center gap-1">
                       <a
@@ -618,7 +592,7 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => startTaskValidation(task.id)}
-                        className="px-2 py-1 rounded bg-blue-500/15 text-blue-300 text-[10px] border border-blue-500/20"
+                        className="px-2 py-1 rounded bg-blue-50 text-blue-700 text-[10px] border border-blue-200"
                       >
                         Open
                       </a>
@@ -626,10 +600,10 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
                         onClick={() => handleTaskCompletion(task.id)}
                         disabled={loading || !validatingTasks[task.id] || timers[task.id] > 0}
                         className={`px-2 py-1 rounded text-[10px] border ${validatingTasks[task.id] && timers[task.id] > 0
-                          ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
                           : validatingTasks[task.id]
-                          ? 'bg-blue-600 text-white border-blue-500/40'
-                          : 'bg-white/5 text-white/40 border-white/10'
+                          ? 'bg-blue-600 text-white border-blue-700'
+                          : 'bg-slate-50 text-slate-400 border-slate-200'
                         }`}
                       >
                         {loading ? 'Verifying' : (validatingTasks[task.id] && timers[task.id] > 0) ? `${timers[task.id]}s` : validatingTasks[task.id] ? 'Claim' : 'Pending'}
@@ -640,29 +614,25 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
               </>
             ) : (
               <>
-                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80" />
-                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/80" />
-                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400/80" />
-                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400/80" />
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${task.isCompleted ? 'bg-green-500/20' : 'bg-blue-500/20'}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${task.isCompleted ? 'bg-emerald-50' : 'bg-blue-50'}`}>
                       {getPlatformIcon(task.platform)}
                     </div>
-                    <span className="text-lg font-semibold text-white">{task.platform}</span>
+                    <span className="text-lg font-semibold text-slate-900">{task.platform}</span>
                   </div>
-                  <div className="pixel-corners bg-green-500/20 px-3 py-1">
-                    <span className="text-sm text-green-400">+{task.reward} NOVA</span>
+                  <div className="px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-100">
+                    <span className="text-sm text-emerald-700">+{task.reward} TAPPS</span>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-white/90 font-medium mb-2">{task.action}</h3>
-                    <p className="text-sm text-white/60">{task.description}</p>
+                    <h3 className="text-slate-900 font-medium mb-2">{task.action}</h3>
+                    <p className="text-sm text-slate-600">{task.description}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     {task.isCompleted ? (
-                      <button disabled className="w-full px-4 py-2.5 rounded-lg bg-green-500/20 text-green-400 font-medium flex items-center justify-center gap-2">
+                      <button disabled className="w-full px-4 py-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 font-medium flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -675,7 +645,7 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => startTaskValidation(task.id)}
-                          className="flex-1 px-4 py-2.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-medium transition-all duration-300 flex items-center justify-center gap-2"
+                          className="flex-1 px-4 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium transition-colors duration-200 flex items-center justify-center gap-2"
                         >
                           <span>Visit {task.platform}</span>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -685,7 +655,7 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
                         <button
                           onClick={() => handleTaskCompletion(task.id)}
                           disabled={loading || !validatingTasks[task.id] || timers[task.id] > 0}
-                          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${validatingTasks[task.id] && timers[task.id] > 0 ? 'bg-yellow-500/20 text-yellow-400' : validatingTasks[task.id] ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600' : 'bg-white/5 text-white/40'}`}
+                          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2 ${validatingTasks[task.id] && timers[task.id] > 0 ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : validatingTasks[task.id] ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}
                         >
                           {loading ? (
                             <>
@@ -700,7 +670,7 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
                           ) : validatingTasks[task.id] ? (
                             <span>Claim Reward</span>
                           ) : (
-                            <span>Pending</span>
+                            <span>Not Claimed</span>
                           )}
                         </button>
                       </>
@@ -722,18 +692,18 @@ const SocialTasks: React.FC<Props> = ({ showSnackbar }) => {
       </div>
 
    
-      <div className={compact ? "p-3 rounded-lg border border-blue-500/10 bg-black/20" : "p-4 bg-black/30 rounded-xl border border-blue-500/20"}>
+      <div className={compact ? "p-3 rounded-lg border border-slate-200 bg-slate-50" : "p-4 bg-slate-50 rounded-xl border border-slate-200"}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-white/60">Task Progress</span>
-          <span className="text-xs text-white">{tasks.filter(t => t.isCompleted).length}/{tasks.length} Completed</span>
+          <span className="text-xs text-slate-600">Task Progress</span>
+          <span className="text-xs text-slate-900">{tasks.filter(t => t.isCompleted).length}/{tasks.length} Completed</span>
         </div>
-        <div className={compact ? "h-1 bg-blue-900/20 rounded-full overflow-hidden" : "relative h-2 bg-blue-900/20 rounded-full overflow-hidden"}>
+        <div className={compact ? "h-1 bg-slate-200 rounded-full overflow-hidden" : "relative h-2 bg-slate-200 rounded-full overflow-hidden"}>
           <div
-            className={compact ? "h-full bg-blue-500 rounded-full transition-all duration-700" : "h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-1000 relative overflow-hidden"}
+            className={compact ? "h-full bg-blue-600 rounded-full transition-all duration-700" : "h-full bg-blue-600 rounded-full transition-all duration-700 relative overflow-hidden"}
             style={{ width: `${(tasks.filter(t => t.isCompleted).length / tasks.length) * 100}%` }}
           >
             {!compact && (
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shimmer -translate-x-full" />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 animate-shimmer -translate-x-full" />
             )}
           </div>
         </div>

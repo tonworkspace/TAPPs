@@ -1,7 +1,7 @@
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { toUserFriendlyAddress } from '@tonconnect/sdk';
 import { FC, useState, useEffect, useRef } from 'react';
-import { FaUserPlus } from 'react-icons/fa';
+import { FaUserPlus, FaGem } from 'react-icons/fa';
 // import { BiNetworkChart } from 'react-icons/bi';
 import { AiOutlineHome } from 'react-icons/ai';
 import { TonConnectButton, } from '@tonconnect/ui-react';
@@ -19,12 +19,11 @@ import { BsCoin } from 'react-icons/bs';
 import { GiScrollUnfurled } from 'react-icons/gi';
 import SocialTasks from '@/components/SocialTasks';
 // import DailyUpdateCard from '@/components/DailyUpdateCard/DailyUpdateCard';
-import { GiParachute } from 'react-icons/gi';
-import { nova, toncoin } from '@/images';
 import { NFTMinter } from '@/components/NFTMinter';
 // import AdminWithdrawalPanel from '@/components/AdminWithdrawalPanel';
 import ArcadeMiningUI from '@/components/ArcadeMiningUI';
 import WithdrawModal from '@/components/WithdrawModal';
+import NewsComponent from '@/components/NewsComponent';
 
 // Add this at the top of your file with other constants
 
@@ -385,7 +384,7 @@ export const IndexPage: FC = () => {
   const [, setUserFriendlyAddress] = useState<string | null>(null);
   const [tonConnectUI] = useTonConnectUI();
   // const isWalletConnected = tonConnectUI.connected;
-  const [hasStaked, setHasStaked] = useState(() => {
+  const [, setHasStaked] = useState(() => {
     return Boolean(user?.balance && user.balance >= 1);
   });
 
@@ -516,66 +515,66 @@ const handleNFTMintSuccess = async (): Promise<void> => {
 
 
   // Add these states at the top of your component
-const [isClaimingReward, setIsClaimingReward] = useState(false);
+// const [isClaimingReward, setIsClaimingReward] = useState(false);
 const [isDepositing, setIsDepositing] = useState(false);
-const [hasClaimedReward, setHasClaimedReward] = useState(() => {
+const [] = useState(() => {
   return localStorage.getItem('hasClaimedWalletReward') === 'true';
 });
 
 // Function to handle claiming rewards
-const handleClaimReward = async () => {
-  if (!tonConnectUI.connected || hasClaimedReward || isClaimingReward) {
-    return;
-  }
+// const handleClaimReward = async () => {
+//   if (!tonConnectUI.connected || hasClaimedReward || isClaimingReward) {
+//     return;
+//   }
   
-  setIsClaimingReward(true);
+//   setIsClaimingReward(true);
   
-  try {
-    // Simulate API call or blockchain transaction
-    await new Promise(resolve => setTimeout(resolve, 1500));
+//   try {
+//     // Simulate API call or blockchain transaction
+//     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Update user state with the new NOVA tokens
-    if (user) {
-      const updatedUser = {
-        ...user,
-        total_sbt: (user.total_sbt || 0) + 10000
-      };
+//     // Update user state with the new NOVA tokens
+//     if (user) {
+//       const updatedUser = {
+//         ...user,
+//         total_sbt: (user.total_sbt || 0) + 10000
+//       };
       
-      updateUserData(updatedUser);
-    }
+//       updateUserData(updatedUser);
+//     }
     
-    // Add to activity log
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      user_id: String(user?.id || ''),
-      type: 'nova_reward',
-      amount: 10000,
-      status: 'completed',
-      created_at: new Date().toISOString()
-    };
+//     // Add to activity log
+//     const newActivity: Activity = {
+//       id: Date.now().toString(),
+//       user_id: String(user?.id || ''),
+//       type: 'nova_reward',
+//       amount: 10000,
+//       status: 'completed',
+//       created_at: new Date().toISOString()
+//     };
     
-    setActivities(prev => [newActivity, ...prev]);
+//     setActivities(prev => [newActivity, ...prev]);
     
-    // Mark as claimed in localStorage to persist across sessions
-    localStorage.setItem('hasClaimedWalletReward', 'true');
-    setHasClaimedReward(true);
+//     // Mark as claimed in localStorage to persist across sessions
+//     localStorage.setItem('hasClaimedWalletReward', 'true');
+//     setHasClaimedReward(true);
     
-    // Show success message
-    showSnackbar({
-      message: 'Reward Claimed!',
-      description: 'You have received 10,000 TAPPS JETTONS'
-    });
+//     // Show success message
+//     showSnackbar({
+//       message: 'Reward Claimed!',
+//       description: 'You have received 10,000 TAPPS JETTONS'
+//     });
     
-  } catch (error) {
-    console.error('Error claiming reward:', error);
-    showSnackbar({
-      message: 'Claim Failed',
-      description: 'There was an error claiming your reward. Please try again.'
-    });
-  } finally {
-    setIsClaimingReward(false);
-  }
-};
+//   } catch (error) {
+//     console.error('Error claiming reward:', error);
+//     showSnackbar({
+//       message: 'Claim Failed',
+//       description: 'There was an error claiming your reward. Please try again.'
+//     });
+//   } finally {
+//     setIsClaimingReward(false);
+//   }
+// };
 
 // // Function to update user balance in the database
 // const updateUserBalance = async (userId: string, newBalance: number) => {
@@ -2357,531 +2356,7 @@ const handleDeposit = async (amount: number) => {
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-slate-100/30 to-purple-50/50" />
-
-            {/* Airdrop Card */}
-            <div className="relative max-w-md mx-auto">
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-lg bg-white">
-                
-                
-                {/* Header with Token Image */}
-                <div className="flex flex-col items-center justify-center p-6 pb-2 relative">
-                  
-                  <div className="relative w-24 h-24 mb-4 group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full border border-slate-200"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img 
-                        src={nova}
-                        alt="TAPPS JETTONS"
-                        className="w-16 h-16 object-contain"
-                      />
-                    </div>
-                  </div>
-                  
-                  <h2 className="text-3xl font-bold text-slate-900 text-center mb-1">
-                    TAPPS Airdrop
-                  </h2>
-                  <p className="text-slate-600 text-center mb-4 max-w-xs">
-                    Complete tasks to earn <span className="text-blue-600 font-semibold">70,000 TAPPS</span> tokens, the future governance token of TAPPS Mine!
-                  </p>
-                  
-                  {/* Total potential earnings */}
-                  <div className="w-full px-6 py-3 bg-slate-50 rounded-xl mb-4 border border-slate-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600 text-sm">Total Potential Earnings:</span>
-                      <span className="text-xl font-bold text-slate-900">70,000 TAPPS</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Task List */}
-                <div className="px-4 pb-4 space-y-3">
-                  {/* Connect Wallet Task */}
-                  <button 
-                    onClick={() => {
-                      if (!tonConnectUI.connected) {
-                        tonConnectUI.openModal();
-                      } else if (!hasClaimedReward) {
-                        handleClaimReward();
-                      }
-                    }}
-                    disabled={isClaimingReward || hasClaimedReward}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl relative overflow-hidden border
-                      transition-all duration-200 ${
-                        hasClaimedReward 
-                          ? 'bg-emerald-50 border-emerald-200 cursor-default' 
-                          : tonConnectUI.connected
-                            ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100 cursor-pointer'
-                            : 'bg-blue-600 hover:bg-blue-700 cursor-pointer border-blue-600'
-                      }`}
-                  >
-                    
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${hasClaimedReward 
-                          ? 'bg-emerald-100' 
-                          : tonConnectUI.connected
-                            ? 'bg-yellow-100'
-                            : 'bg-white'
-                        }`}
-                      >
-                        {hasClaimedReward ? (
-                          <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : tonConnectUI.connected ? (
-                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v12a3 3 0 003 3z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="text-left">
-                        <div className={`font-medium ${
-                          hasClaimedReward 
-                            ? 'text-emerald-700' 
-                            : tonConnectUI.connected
-                              ? 'text-yellow-700'
-                              : 'text-white'
-                        }`}>
-                          {hasClaimedReward 
-                            ? 'Wallet Connect Task Completed' 
-                            : tonConnectUI.connected
-                              ? 'Claim Wallet Reward'
-                              : 'Connect Your TON Wallet'
-                          }
-                        </div>
-                        <div className="flex items-center">
-                          {isClaimingReward ? (
-                            <span className="text-slate-600 text-sm">Processing...</span>
-                          ) : hasClaimedReward ? (
-                            <span className="text-slate-600 text-sm">+10,000 TAPPS Earned</span>
-                          ) : (
-                            <>
-                              <div className="w-4 h-4 rounded-full bg-purple-400 flex items-center justify-center mr-1">
-                                <span className="text-xs text-black font-bold">+</span>
-                              </div>
-                              <span className="text-purple-400 text-sm font-medium">10,000 TAPPS</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className={`relative z-10 ${
-                      hasClaimedReward 
-                        ? 'text-green-400' 
-                        : tonConnectUI.connected
-                          ? 'text-yellow-400'
-                          : 'text-white'
-                    }`}>
-                      {isClaimingReward ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current" />
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d={hasClaimedReward ? "M5 13l4 4L19 7" : "M9 5l7 7-7 7"} />
-                        </svg>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Stake TON Task */}
-                  <button 
-                    onClick={() => {
-                      if (!tonConnectUI.connected) {
-                        showSnackbar({
-                          message: 'Connect Wallet',
-                          description: 'Please connect your wallet first'
-                        });
-                        return;
-                      }
-                      setShowDepositModal(true);
-                    }}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl relative overflow-hidden
-                      transition-all duration-300 ${
-                        Boolean(isStakingCompleted) 
-                          ? 'bg-green-500/20 cursor-default' 
-                          : hasStaked
-                            ? 'bg-yellow-500/20 hover:bg-yellow-500/30'
-                            : 'bg-black/50 hover:bg-black/70'
-                      }`}
-                    disabled={Boolean(isStakingCompleted)}
-                  >
-                    {/* Animated background for active buttons */}
-                    {!isStakingCompleted && hasStaked && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1500 ease-in-out"></div>
-                    )}
-                    
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${Boolean(isStakingCompleted) 
-                          ? 'bg-green-500/20' 
-                          : hasStaked
-                            ? 'bg-yellow-500/20'
-                            : 'bg-white/10'
-                        }`}
-                      >
-                        {Boolean(isStakingCompleted) ? (
-                          <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <img 
-                            src={toncoin}
-                            alt="TON"
-                            className="w-6 h-6 object-contain"
-                          />
-                        )}
-                      </div>
-                      <div className="text-left">
-                        <div className={`font-medium ${
-                          Boolean(isStakingCompleted) 
-                            ? 'text-green-400' 
-                            : hasStaked
-                              ? 'text-yellow-400'
-                              : 'text-white'
-                        }`}>
-                          {Boolean(isStakingCompleted) 
-                            ? 'Staking Task Completed' 
-                            : hasStaked
-                              ? `Staked: ${user?.balance?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} TON`
-                              : 'Stake TON in StakeNova'
-                          }
-                        </div>
-<div className="flex items-center">
-  {Boolean(isStakingCompleted) ? (
-    <span className="text-white/60 text-sm">+10,000 TAPPS Earned</span>
-  ) : hasStaked ? (
-    <span className="text-white/60 text-sm">
-      Need ${Math.max(0, (1 - (user?.balance || 0))).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} TON more
-    </span>
-  ) : (
-    <>
-      <div className="w-4 h-4 rounded-full bg-purple-400 flex items-center justify-center mr-1">
-        <span className="text-xs text-black font-bold">+</span>
-      </div>
-        <span className="text-purple-400 text-sm font-medium">10,000 TAPPS</span>
-    </>
-  )}
-</div>
-                      </div>
-                    </div>
-                    <div className={`relative z-10 ${
-                      Boolean(isStakingCompleted) 
-                        ? 'text-green-400' 
-                        : hasStaked
-                          ? 'text-yellow-400'
-                          : 'text-white'
-                    }`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d={Boolean(isStakingCompleted) ? "M5 13l4 4L19 7" : "M9 5l7 7-7 7"} />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Complete Social Tasks */}
-                  <button 
-                    onClick={() => {
-                      if (!tonConnectUI.connected) {
-                        showSnackbar({
-                          message: 'Connect Wallet',
-                          description: 'Please connect your wallet first'
-                        });
-                        return;
-                      }
-                      setCurrentTab('tasks');
-                    }}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl relative overflow-hidden
-                      transition-all duration-300 ${
-                        localStorage.getItem('hasClaimedAllTasksBonus') === 'true'
-                          ? 'bg-green-500/20 cursor-default' 
-                          : 'bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-600/80 hover:to-purple-600/80'
-                      }`}
-                  >
-                    {/* Animated background for active buttons */}
-                    {localStorage.getItem('hasClaimedAllTasksBonus') !== 'true' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1500 ease-in-out"></div>
-                    )}
-                    
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${localStorage.getItem('hasClaimedAllTasksBonus') === 'true' 
-                          ? 'bg-green-500/20' 
-                          : 'bg-white/20'
-                        }`}
-                      >
-                        {localStorage.getItem('hasClaimedAllTasksBonus') === 'true' ? (
-                          <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 21.418 18 23 18c1.746 0 3.332-.477 4.5-1.253V6.253c0-1.066-1.668-1.5-4.5-1.5S12 5.187 12 6.253z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="text-left">
-                        <div className={`font-medium ${
-                          localStorage.getItem('hasClaimedAllTasksBonus') === 'true' 
-                            ? 'text-green-400' 
-                            : 'text-white'
-                        }`}>
-                          {localStorage.getItem('hasClaimedAllTasksBonus') === 'true' 
-                            ? 'Social Tasks Completed' 
-                            : 'Complete Social Tasks'
-                          }
-                        </div>
-                        <div className="flex items-center">
-                          {localStorage.getItem('hasClaimedAllTasksBonus') === 'true' ? (
-                            <span className="text-white/60 text-sm">+25,000 TAPPS Earned</span>
-                          ) : (
-                            <>
-                              <div className="w-4 h-4 rounded-full bg-pink-400 flex items-center justify-center mr-1">
-                                <span className="text-xs text-black font-bold">+</span>
-                              </div>
-                              <span className="text-pink-300 text-sm font-medium">25,000 TAPPS</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className={`relative z-10 ${
-                      localStorage.getItem('hasClaimedAllTasksBonus') === 'true' 
-                        ? 'text-green-400' 
-                        : 'text-white'
-                    }`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d={localStorage.getItem('hasClaimedAllTasksBonus') === 'true' ? "M5 13l4 4L19 7" : "M9 5l7 7-7 7"} />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Mint TAPPS NFT Pass */}
-                  <button 
-                    onClick={() => {
-                      if (!tonConnectUI.connected) {
-                        showSnackbar({
-                          message: 'Connect Wallet',
-                          description: 'Please connect your wallet first'
-                        });
-                        return;
-                      }
-                      
-                      // Don't open modal if already minting or minted
-                      if (nftMintStatus === 'loading' || hasNFTPass) return;
-                      
-                      setShowNFTMinterModal(true);
-                    }}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl relative overflow-hidden
-                      transition-all duration-300 ${
-                        hasNFTPass
-                          ? 'bg-green-500/20 cursor-default' 
-                          : nftMintStatus === 'loading'
-                            ? 'bg-blue-500/20 cursor-wait'
-                            : 'bg-gradient-to-r from-purple-500/80 to-blue-500/80 hover:from-purple-600/80 hover:to-blue-600/80'
-                      }`}
-                    disabled={nftMintStatus === 'loading' || hasNFTPass}
-                  >
-                    {/* Animated background for active buttons */}
-                    {!hasNFTPass && nftMintStatus !== 'loading' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1500 ease-in-out"></div>
-                    )}
-                    
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${hasNFTPass 
-                          ? 'bg-green-500/20' 
-                          : nftMintStatus === 'loading'
-                            ? 'bg-blue-500/20'
-                            : 'bg-white/20'
-                        }`}
-                      >
-                        {hasNFTPass ? (
-                          <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : nftMintStatus === 'loading' ? (
-                          <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="text-left">
-                        <div className={`font-medium ${
-                          hasNFTPass 
-                            ? 'text-green-400'
-                            : nftMintStatus === 'loading'
-                              ? 'text-blue-400'
-                              : 'text-white'
-                        }`}>
-                          {hasNFTPass 
-                            ? 'TAPPS Pass Minted'
-                            : nftMintStatus === 'loading'
-                              ? 'Minting in progress...'
-                              : 'Mint TAPPS Airdrop Pass'
-                          }
-                        </div>
-                        <div className="flex items-center">
-                          {hasNFTPass ? (
-                            <span className="text-white/60 text-sm">+25,000 TAPPS Earned</span>
-                          ) : nftMintStatus === 'loading' ? (
-                            <span className="text-blue-300/60 text-sm">Please wait...</span>
-                          ) : (
-                            <>
-                              <div className="w-4 h-4 rounded-full bg-blue-400 flex items-center justify-center mr-1">
-                                <span className="text-xs text-black font-bold">+</span>
-                              </div>
-                              <span className="text-blue-300 text-sm font-medium">25,000 TAPPS</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className={`relative z-10 ${
-                      hasNFTPass 
-                        ? 'text-green-400'
-                        : nftMintStatus === 'loading'
-                          ? 'text-blue-400'
-                          : 'text-white'
-                    }`}>
-                      {nftMintStatus === 'loading' ? (
-                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d={hasNFTPass ? "M5 13l4 4L19 7" : "M9 5l7 7-7 7"} />
-                        </svg>
-                      )}
-                    </div>
-                  </button>
-   </div>
-
-                {/* Progress Bar */}
-                <div className="px-6 pb-6">
-                  <div className="mb-2 flex justify-between items-center">
-                    <span className="text-xs text-white/60">Your progress</span>
-                    <span className="text-xs font-medium text-white">
-                      {(() => {
-                        // Count completed tasks
-                        let completedCount = 0;
-                        if (hasClaimedReward) completedCount++;
-                        if (isStakingCompleted) completedCount++;
-                        if (localStorage.getItem('hasClaimedAllTasksBonus') === 'true') completedCount++;
-                        if (hasNFTPass) completedCount++;
-                        
-                        // Total number of tasks
-                        const totalTasks = 4;
-                        
-                        return `${completedCount}/${totalTasks} completed`;
-                      })()}
-                    </span>
-                  </div>
-                  <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden relative">
-                    <div className="absolute inset-0 bg-grid-white/[0.05] bg-[length:8px_8px]"></div>
-                    <div 
-                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500 relative" 
-                      style={{ 
-                        width: `${(() => {
-                          // Calculate percentage
-                          let completedCount = 0;
-                          if (hasClaimedReward) completedCount++;
-                          if (isStakingCompleted) completedCount++;
-                          if (localStorage.getItem('hasClaimedAllTasksBonus') === 'true') completedCount++;
-                          if (hasNFTPass) completedCount++;
-                          
-                          const totalTasks = 4;
-                          return (completedCount / totalTasks) * 100;
-                        })()}%` 
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shimmer -translate-x-full"></div>
-                    </div>
-                  </div>
-                  
-                  {/* Total earned display */}
-                  <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/20">
-                    <div className="flex justify-between items-center">
-                      <div className="text-white/70">Total NOVA earned:</div>
-                      <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                        {(() => {
-                          // Calculate total earned
-                          let totalEarned = 0;
-                          if (hasClaimedReward) totalEarned += 10000;
-                          if (isStakingCompleted) totalEarned += 10000;
-                          if (localStorage.getItem('hasClaimedAllTasksBonus') === 'true') totalEarned += 25000;
-                          if (hasNFTPass) totalEarned += 25000;
-                          
-                          return totalEarned.toLocaleString();
-                        })()} NOVA
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Total earned display */}
-{/* NOVA Balance Display - NotCoin Style */}
-<div className="mt-6 relative overflow-hidden">
-  {/* Background with animated gradient */}
-  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-blue-500/20 to-purple-600/20 animate-gradient-x rounded-xl"></div>
-  <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:8px_8px]"></div>
-  
-  {/* Content */}
-  <div className="relative p-5 rounded-xl border border-purple-500/30">
-    <div className="flex flex-col items-center">
-      {/* Token Icon */}
-      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mb-2 shadow-lg shadow-purple-500/20">
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      
-      {/* Balance */}
-      <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-1">
-        {user?.total_sbt?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) ?? 0}
-      </div>
-      
-      {/* Token Name */}
-      <div className="text-white/70 text-sm mb-3">NOVA Tokens</div>
-      
-      {/* Progress Bar */}
-      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-2">
-        <div 
-          className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full relative overflow-hidden"
-          style={{ width: `${Math.min(((user?.total_sbt ?? 0) / 100) * 100, 100)}%` }}
-        >
-          <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-        </div>
-      </div>
-      
-      {/* Level */}
-      <div className="text-xs text-white/60">
-      {calculatePlayerLevel(user?.total_sbt ?? 0)} • {Math.floor(((user?.total_sbt ?? 0) % 100) * 100) / 100}% to next level
-      </div>
-    </div>
-  </div>
-</div>
-                  
-                  {/* Info text */}
-                  <div className="mt-4 flex items-start gap-2 text-xs text-white/50">
-                    <svg className="w-4 h-4 text-purple-400/70 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>
-                      NOVA tokens will be claimable after the token generation event. Complete all tasks to maximize your allocation in the upcoming airdrop.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <NewsComponent/>
           </div>
         )}
 
@@ -3263,7 +2738,7 @@ const handleDeposit = async (amount: number) => {
             {[
               { id: 'home', text: 'Main', Icon: AiOutlineHome },
               { id: 'tasks', text: 'Tasks', Icon: GiScrollUnfurled },
-              { id: 'airdrop', text: 'Airdrop', Icon: GiParachute },
+              { id: 'airdrop', text: 'Airdrop', Icon: FaGem },
               { id: 'network', text: 'Network', Icon: FaUserPlus },
               { id: 'token', text: 'Token', Icon: BsCoin },
             ].map(({ id, text, Icon }) => (
@@ -3487,35 +2962,35 @@ const SYNC_INTERVAL = 60000; // Sync every minute
 // };
 
 // Function to calculate player level based on NOVA token balance (1 to 10 million range)
-const calculatePlayerLevel = (novaBalance: number): string => {
-  // Level thresholds and names for 1 to 10 million range
-  const levels = [
-    { threshold: 0, name: "Nova Recruit" },       // Level 1: 0-999
-    { threshold: 1000, name: "Nova Initiate" },   // Level 2: 1K-9.9K
-    { threshold: 10000, name: "Nova Explorer" },  // Level 3: 10K-49.9K
-    { threshold: 50000, name: "Nova Voyager" },   // Level 4: 50K-99.9K
-    { threshold: 100000, name: "Nova Guardian" }, // Level 5: 100K-499.9K
-    { threshold: 500000, name: "Nova Sentinel" }, // Level 6: 500K-999.9K
-    { threshold: 1000000, name: "Nova Sovereign" },// Level 7: 1M-4.99M
-    { threshold: 5000000, name: "Nova Legend" },   // Level 8: 5M-9.99M
-    { threshold: 10000000, name: "Nova Immortal" },// Level 9: 10M+
-  ];
+// const calculatePlayerLevel = (novaBalance: number): string => {
+//   // Level thresholds and names for 1 to 10 million range
+//   const levels = [
+//     { threshold: 0, name: "Nova Recruit" },       // Level 1: 0-999
+//     { threshold: 1000, name: "Nova Initiate" },   // Level 2: 1K-9.9K
+//     { threshold: 10000, name: "Nova Explorer" },  // Level 3: 10K-49.9K
+//     { threshold: 50000, name: "Nova Voyager" },   // Level 4: 50K-99.9K
+//     { threshold: 100000, name: "Nova Guardian" }, // Level 5: 100K-499.9K
+//     { threshold: 500000, name: "Nova Sentinel" }, // Level 6: 500K-999.9K
+//     { threshold: 1000000, name: "Nova Sovereign" },// Level 7: 1M-4.99M
+//     { threshold: 5000000, name: "Nova Legend" },   // Level 8: 5M-9.99M
+//     { threshold: 10000000, name: "Nova Immortal" },// Level 9: 10M+
+//   ];
   
-  // Find the player's level
-  let levelIndex = 0;
-  for (let i = 1; i < levels.length; i++) {
-    if (novaBalance >= levels[i].threshold) {
-      levelIndex = i;
-    } else {
-      break;
-    }
-  }
+//   // Find the player's level
+//   let levelIndex = 0;
+//   for (let i = 1; i < levels.length; i++) {
+//     if (novaBalance >= levels[i].threshold) {
+//       levelIndex = i;
+//     } else {
+//       break;
+//     }
+//   }
   
-  // Get level name
-  const levelName = levels[levelIndex].name;
+//   // Get level name
+//   const levelName = levels[levelIndex].name;
   
-  return levelName;
-};
+//   return levelName;
+// };
 
 // // Function to get the appropriate level icon based on NOVA balance
 // const getLevelIcon = (novaBalance: number): JSX.Element => {
