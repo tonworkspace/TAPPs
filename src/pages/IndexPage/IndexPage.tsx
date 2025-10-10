@@ -220,7 +220,7 @@ const tonweb = isMainnet ?
 
 
 // Add this near the top with other constants
-const NETWORK_NAME = isMainnet ? 'Mainnet' : 'Testnet';
+// const NETWORK_NAME = isMainnet ? 'Mainnet' : 'Testnet';
 
 // Helper function to generate unique ID
 const generateUniqueId = async () => {
@@ -414,7 +414,7 @@ export const IndexPage: FC = () => {
   const [activeCard] = useState<CardType>('stats');
   const [currentROI, ] = useState<number>(0.01); // 1% daily default
   const [tonPrice, setTonPrice] = useState(0);
-  const [tonPriceChange, setTonPriceChange] = useState(0);
+  const [, setTonPriceChange] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Add state for activities
@@ -425,7 +425,7 @@ export const IndexPage: FC = () => {
 
   // Add these state variables near the top with other state declarations
   const [walletBalance, setWalletBalance] = useState<string>('0');
-  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+  const [, setIsLoadingBalance] = useState(true);
 
   // Add these state variables
   const [isSnackbarVisible, setSnackbarVisible] = useState(false);
@@ -460,7 +460,7 @@ const handleNFTMintSuccess = async (): Promise<void> => {
   // Show success message
   showSnackbar({
     message: 'NFT Minted Successfully',
-    description: 'You have earned 25,000 NOVA tokens!'
+    description: 'You have earned 25,000 TAPPS JETTONS!'
   });
 };
 
@@ -563,7 +563,7 @@ const handleClaimReward = async () => {
     // Show success message
     showSnackbar({
       message: 'Reward Claimed!',
-      description: 'You have received 10,000 NOVA tokens'
+      description: 'You have received 10,000 TAPPS JETTONS'
     });
     
   } catch (error) {
@@ -786,7 +786,7 @@ const handleClaimEarnings = async () => {
     // Show success message
     showSnackbar({
       message: 'Rewards Claimed',
-      description: `Added ${earningState.currentEarnings.toFixed(8)} TON + ${novaAmount.toFixed(8)} NOVA`
+      description: `Added ${earningState.currentEarnings.toFixed(8)} TON + ${novaAmount.toFixed(8)} TAPPS`
     });
     
     // Set cooldown (30 minutes)
@@ -1872,7 +1872,7 @@ const handleDeposit = async (amount: number) => {
 
       showSnackbar({
         message: 'Rewards Claimed',
-        description: `Added ${offlineRewardsAmount.toFixed(8)} TON + ${(offlineRewardsAmount * 0.1).toFixed(8)} NOVA`
+        description: `Added ${offlineRewardsAmount.toFixed(8)} TON + ${(offlineRewardsAmount * 0.1).toFixed(8)} TAPPS`
       });
 
       setShowOfflineRewardsModal(false);
@@ -2155,7 +2155,7 @@ const handleDeposit = async (amount: number) => {
       // Show success message
       showSnackbar({
         message: 'Task Completed!',
-        description: 'Wallet connection verified. +10,000 NOVA tokens'
+        description: 'Wallet connection verified. +10,000 TAPPS JETTONS'
       });
 
       // Update task in database if needed
@@ -2210,7 +2210,7 @@ const handleDeposit = async (amount: number) => {
       // Show success message
       showSnackbar({
         message: 'Staking Task Completed!',
-        description: 'You have received 10,000 NOVA tokens'
+        description: 'You have received 10,000 TAPPS.'
       });
     }
   }, [user?.balance, isStakingCompleted, user]);
@@ -2241,52 +2241,59 @@ const handleDeposit = async (amount: number) => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0A0A0F] text-white antialiased mb-[3.7rem]">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 antialiased mb-[3.7rem]">
       {!isLoading && user && showOnboarding && <OnboardingScreen />}
       {/* Header */}
-      <div className="px-2 py-4 flex justify-between items-center sticky top-0 bg-gradient-to-b from-black via-black/95 to-black/90 backdrop-blur-xl z-50 border-b border-white/5">
+      <div className="px-4 py-4 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-md z-50 border-b border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
           {/* User Profile Section */}
           <div className="flex items-center gap-3">
-            {/* Avatar with Animated Border */}
-            <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-75 blur-sm animate-gradient-slow"></div>
-              <div className="relative">
-                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white/10 bg-gradient-to-br from-[#1a1c2e] to-[#0d0f1d]">
+            {/* Professional Avatar */}
+            <div className="relative group">
+              <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 bg-gradient-to-br from-slate-100 to-slate-200 shadow-sm group-hover:shadow-md transition-all duration-200">
+                {user?.photoUrl ? (
                   <img 
-                    src="https://xelene.me/telegram.gif" 
-                    alt="" 
+                    src={user.photoUrl} 
+                    alt="Profile" 
                     className="w-full h-full object-cover"
                   />
-                  {/* Online Status Indicator */}
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
-                </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
               </div>
+              {/* Online Status Indicator */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
             </div>
 
             {/* User Info */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">
+                <span className="text-lg font-semibold text-slate-900">
                   {user?.username ? `@${user.username}` : '@username'}
                 </span>
-                {/* Verified Badge - if needed */}
-                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                {/* Verified Badge */}
+                <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-2.5 h-2.5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {/* User Name */}
-                <span className="text-xs text-white/60 truncate max-w-[120px]">
-                  {user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'User Name'}
-                </span>
-                {user?.rank && (
-                  <div className="pixel-corners bg-blue-500/20 px-2 py-0.5 hidden">
-                    <span className="text-[10px] font-medium text-blue-400 uppercase tracking-wider">
+                {/* <span className="text-xs text-slate-600 truncate max-w-[140px] font-medium">
+                  {user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Anonymous User' : 'Welcome'}
+                </span> */}
+                {/* {user?.rank && (
+                  <div className="bg-blue-100 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">
                       {user.rank}
                     </span>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           </div>
@@ -2294,67 +2301,15 @@ const handleDeposit = async (amount: number) => {
 
         {/* Right Section with Connect Button and Optional Menu */}
         <div className="flex items-center gap-3">
-          {/* Optional Network Status */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-            <span className="text-xs text-white/60">Mainnet</span>
+          {/* Network Status Badge */}
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors duration-200">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span className="text-xs font-medium text-slate-700">Mainnet</span>
           </div>
 
           {/* Connect Button with Custom Styling */}
-          <TonConnectButton />
-        </div>
-      </div>
-
-      {/* Network Status Bar */}
-      <div className="flex items-center justify-between gap-2 px-4 py-2 bg-[#1A1B1E]/50 border-b border-white/5">
-        {/* Wallet Balance and TON Price */}
-        <div className="flex items-center gap-2">
-          {/* Wallet Balance */}
-          <div className="px-2 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-1.5">
-            <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-            {isLoadingBalance ? (
-              <div className="w-3 h-3 rounded-full border-2 border-white/20 border-t-white/60 animate-spin" />
-            ) : (
-              <span className="text-xs font-medium text-white/80">
-                {Number(walletBalance).toFixed(2)} TON
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Network Info - Existing Code */}
-        <div className="flex items-center gap-2 text-xs text-white/60">
-          {/* TON Price */}
-          <div className="px-2 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-1.5">
-            <svg className="w-3 h-3 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className={`text-xs font-medium ${
-              tonPriceChange >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}>
-              ${tonPrice.toFixed(2)}
-              <span className="ml-1 text-[10px]">
-                {tonPriceChange >= 0 ? '↑' : '↓'}{Math.abs(tonPriceChange).toFixed(2)}%
-              </span>
-            </span>
-          </div>
-        
-          {/* Network Badge */}
-          <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 ${
-            isMainnet 
-              ? 'bg-green-500/10 border border-green-500/20' 
-              : 'bg-yellow-500/10 border border-yellow-500/20'
-          }`}>
-            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-              isMainnet ? 'bg-green-400' : 'bg-yellow-400'
-            }`} />
-            <span className={`text-xs font-medium ${
-              isMainnet ? 'text-green-400' : 'text-yellow-400'
-            }`}>
-              {NETWORK_NAME}
-            </span>
+          <div className="relative">
+            <TonConnectButton />
           </div>
         </div>
       </div>
@@ -2362,8 +2317,8 @@ const handleDeposit = async (amount: number) => {
       {/* Main Content Area */}
       <div className="flex-1">
         {currentTab === 'home' && (
-          <div className="space-y-2 px-2 pb-2 overflow-y-auto">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/30 blur-3xl" />
+          <div className="space-y-4 px-4 pb-4 overflow-y-auto">
+        <div className="absolute inset-0 bg-slate-50" />
 
            {/* <DailyUpdateCard earningState={earningState} /> */}
 
@@ -2385,88 +2340,55 @@ const handleDeposit = async (amount: number) => {
               isLoadingActivities={isLoadingActivities}
             />
 
-            {/* Card Navigation */}
-           
 
-            {/* Card Content */}
-        
-          {/* Card Content */}
          
           </div>
         )}
 
         {currentTab === 'network' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/20 blur-3xl" />
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             <ReferralSystem 
             />
           </div>
         )}
 
         {currentTab === 'airdrop' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            {/* Enhanced background with animated gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/15 to-pink-500/10 animate-gradient-slow blur-3xl" />
-            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:20px_20px] opacity-50" />
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+            {/* Clean background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-slate-100/30 to-purple-50/50" />
 
             {/* Airdrop Card */}
             <div className="relative max-w-md mx-auto">
-              <div className="relative backdrop-blur-xl rounded-2xl overflow-hidden border border-purple-500/30 shadow-2xl
-                bg-gradient-to-b from-[#1a1c2e]/90 to-[#0d0f1d]/90">
+              <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-lg bg-white">
                 
-                {/* Animated corner decorations */}
-                <div className="absolute -top-px -left-px w-16 h-16">
-                  <div className="absolute top-0 left-0 w-[2px] h-8 bg-gradient-to-b from-purple-400/60 to-transparent" />
-                  <div className="absolute top-0 left-0 h-[2px] w-8 bg-gradient-to-r from-purple-400/60 to-transparent" />
-                </div>
-                <div className="absolute -top-px -right-px w-16 h-16">
-                  <div className="absolute top-0 right-0 w-[2px] h-8 bg-gradient-to-b from-purple-400/60 to-transparent" />
-                  <div className="absolute top-0 right-0 h-[2px] w-8 bg-gradient-to-l from-purple-400/60 to-transparent" />
-                </div>
-                <div className="absolute -bottom-px -left-px w-16 h-16">
-                  <div className="absolute bottom-0 left-0 w-[2px] h-8 bg-gradient-to-t from-purple-400/60 to-transparent" />
-                  <div className="absolute bottom-0 left-0 h-[2px] w-8 bg-gradient-to-r from-purple-400/60 to-transparent" />
-                </div>
-                <div className="absolute -bottom-px -right-px w-16 h-16">
-                  <div className="absolute bottom-0 right-0 w-[2px] h-8 bg-gradient-to-t from-purple-400/60 to-transparent" />
-                  <div className="absolute bottom-0 right-0 h-[2px] w-8 bg-gradient-to-l from-purple-400/60 to-transparent" />
-                </div>
                 
                 {/* Header with Token Image */}
                 <div className="flex flex-col items-center justify-center p-6 pb-2 relative">
-                  {/* Animated glow effect */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
                   
                   <div className="relative w-24 h-24 mb-4 group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full border border-slate-200"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <img 
                         src={nova}
-                        alt="NOVA Token"
-                        className="w-16 h-16 object-contain animate-float"
+                        alt="TAPPS JETTONS"
+                        className="w-16 h-16 object-contain"
                       />
-                    </div>
-                    {/* Orbiting particles */}
-                    <div className="absolute w-full h-full animate-spin-slow">
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                    <div className="absolute w-full h-full animate-spin-slow-reverse">
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-pink-400 rounded-full"></div>
                     </div>
                   </div>
                   
-                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-center mb-1">
-                    NOVA Airdrop
+                  <h2 className="text-3xl font-bold text-slate-900 text-center mb-1">
+                    TAPPS Airdrop
                   </h2>
-                  <p className="text-white/80 text-center mb-4 max-w-xs">
-                    Complete tasks to earn <span className="text-purple-400 font-semibold">70,000 NOVA</span> tokens, the future governance token of StakeNova!
+                  <p className="text-slate-600 text-center mb-4 max-w-xs">
+                    Complete tasks to earn <span className="text-blue-600 font-semibold">70,000 TAPPS</span> tokens, the future governance token of TAPPS Mine!
                   </p>
                   
                   {/* Total potential earnings */}
-                  <div className="w-full px-6 py-3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl mb-4">
+                  <div className="w-full px-6 py-3 bg-slate-50 rounded-xl mb-4 border border-slate-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">Total Potential Earnings:</span>
-                      <span className="text-xl font-bold text-white">70,000 NOVA</span>
+                      <span className="text-slate-600 text-sm">Total Potential Earnings:</span>
+                      <span className="text-xl font-bold text-slate-900">70,000 TAPPS</span>
                     </div>
                   </div>
                 </div>
@@ -2483,40 +2405,36 @@ const handleDeposit = async (amount: number) => {
                       }
                     }}
                     disabled={isClaimingReward || hasClaimedReward}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl relative overflow-hidden
-                      transition-all duration-300 ${
+                    className={`w-full flex items-center justify-between p-4 rounded-xl relative overflow-hidden border
+                      transition-all duration-200 ${
                         hasClaimedReward 
-                          ? 'bg-green-500/20 cursor-default' 
+                          ? 'bg-emerald-50 border-emerald-200 cursor-default' 
                           : tonConnectUI.connected
-                            ? 'bg-yellow-500/20 hover:bg-yellow-500/30 cursor-pointer'
-                            : 'bg-blue-500/80 hover:bg-blue-600/80 cursor-pointer'
+                            ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100 cursor-pointer'
+                            : 'bg-blue-600 hover:bg-blue-700 cursor-pointer border-blue-600'
                       }`}
                   >
-                    {/* Animated background for active buttons */}
-                    {!hasClaimedReward && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-1500 ease-in-out"></div>
-                    )}
                     
                     <div className="flex items-center gap-3 relative z-10">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center
                         ${hasClaimedReward 
-                          ? 'bg-green-500/20' 
+                          ? 'bg-emerald-100' 
                           : tonConnectUI.connected
-                            ? 'bg-yellow-500/20'
-                            : 'bg-white/20'
+                            ? 'bg-yellow-100'
+                            : 'bg-white'
                         }`}
                       >
                         {hasClaimedReward ? (
-                          <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         ) : tonConnectUI.connected ? (
-                          <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                               d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         ) : (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                               d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v12a3 3 0 003 3z" />
                           </svg>
@@ -2525,9 +2443,9 @@ const handleDeposit = async (amount: number) => {
                       <div className="text-left">
                         <div className={`font-medium ${
                           hasClaimedReward 
-                            ? 'text-green-400' 
+                            ? 'text-emerald-700' 
                             : tonConnectUI.connected
-                              ? 'text-yellow-400'
+                              ? 'text-yellow-700'
                               : 'text-white'
                         }`}>
                           {hasClaimedReward 
@@ -2539,15 +2457,15 @@ const handleDeposit = async (amount: number) => {
                         </div>
                         <div className="flex items-center">
                           {isClaimingReward ? (
-                            <span className="text-white/60 text-sm">Processing...</span>
+                            <span className="text-slate-600 text-sm">Processing...</span>
                           ) : hasClaimedReward ? (
-                            <span className="text-white/60 text-sm">+10,000 NOVA Earned</span>
+                            <span className="text-slate-600 text-sm">+10,000 TAPPS Earned</span>
                           ) : (
                             <>
                               <div className="w-4 h-4 rounded-full bg-purple-400 flex items-center justify-center mr-1">
                                 <span className="text-xs text-black font-bold">+</span>
                               </div>
-                              <span className="text-purple-400 text-sm font-medium">10,000 NOVA</span>
+                              <span className="text-purple-400 text-sm font-medium">10,000 TAPPS</span>
                             </>
                           )}
                         </div>
@@ -2636,7 +2554,7 @@ const handleDeposit = async (amount: number) => {
                         </div>
 <div className="flex items-center">
   {Boolean(isStakingCompleted) ? (
-    <span className="text-white/60 text-sm">+10,000 NOVA Earned</span>
+    <span className="text-white/60 text-sm">+10,000 TAPPS Earned</span>
   ) : hasStaked ? (
     <span className="text-white/60 text-sm">
       Need ${Math.max(0, (1 - (user?.balance || 0))).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} TON more
@@ -2646,7 +2564,7 @@ const handleDeposit = async (amount: number) => {
       <div className="w-4 h-4 rounded-full bg-purple-400 flex items-center justify-center mr-1">
         <span className="text-xs text-black font-bold">+</span>
       </div>
-      <span className="text-purple-400 text-sm font-medium">10,000 NOVA</span>
+        <span className="text-purple-400 text-sm font-medium">10,000 TAPPS</span>
     </>
   )}
 </div>
@@ -2721,13 +2639,13 @@ const handleDeposit = async (amount: number) => {
                         </div>
                         <div className="flex items-center">
                           {localStorage.getItem('hasClaimedAllTasksBonus') === 'true' ? (
-                            <span className="text-white/60 text-sm">+25,000 NOVA Earned</span>
+                            <span className="text-white/60 text-sm">+25,000 TAPPS Earned</span>
                           ) : (
                             <>
                               <div className="w-4 h-4 rounded-full bg-pink-400 flex items-center justify-center mr-1">
                                 <span className="text-xs text-black font-bold">+</span>
                               </div>
-                              <span className="text-pink-300 text-sm font-medium">25,000 NOVA</span>
+                              <span className="text-pink-300 text-sm font-medium">25,000 TAPPS</span>
                             </>
                           )}
                         </div>
@@ -2745,7 +2663,7 @@ const handleDeposit = async (amount: number) => {
                     </div>
                   </button>
 
-                  {/* Mint NovaClub NFT Pass */}
+                  {/* Mint TAPPS NFT Pass */}
                   <button 
                     onClick={() => {
                       if (!tonConnectUI.connected) {
@@ -2807,15 +2725,15 @@ const handleDeposit = async (amount: number) => {
                               : 'text-white'
                         }`}>
                           {hasNFTPass 
-                            ? 'NovaClub Pass Minted'
+                            ? 'TAPPS Pass Minted'
                             : nftMintStatus === 'loading'
                               ? 'Minting in progress...'
-                              : 'Mint NovaClub Airdrop Pass'
+                              : 'Mint TAPPS Airdrop Pass'
                           }
                         </div>
                         <div className="flex items-center">
                           {hasNFTPass ? (
-                            <span className="text-white/60 text-sm">+25,000 NOVA Earned</span>
+                            <span className="text-white/60 text-sm">+25,000 TAPPS Earned</span>
                           ) : nftMintStatus === 'loading' ? (
                             <span className="text-blue-300/60 text-sm">Please wait...</span>
                           ) : (
@@ -2823,7 +2741,7 @@ const handleDeposit = async (amount: number) => {
                               <div className="w-4 h-4 rounded-full bg-blue-400 flex items-center justify-center mr-1">
                                 <span className="text-xs text-black font-bold">+</span>
                               </div>
-                              <span className="text-blue-300 text-sm font-medium">25,000 NOVA</span>
+                              <span className="text-blue-300 text-sm font-medium">25,000 TAPPS</span>
                             </>
                           )}
                         </div>
@@ -2968,9 +2886,9 @@ const handleDeposit = async (amount: number) => {
         )}
 
         {currentTab === 'tasks' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            {/* Glowing background effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/30 blur-3xl" />
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+            {/* Clean background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             {/* Content */}
             <div className="relative">
               <SocialTasks showSnackbar={showSnackbar}/>
@@ -2979,19 +2897,19 @@ const handleDeposit = async (amount: number) => {
         )}
 
         {currentTab === 'token' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            {/* Glowing background effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/30 blur-3xl" />
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+            {/* Clean background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             {/* Content */}
             <div className="relative">
               <TokenLaunchpad />
-                  </div>
-                  </div>
+            </div>
+          </div>
         )}
 
         {currentTab === 'activity' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/20 blur-3xl" />
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             <div className="relative max-w-lg mx-auto space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -3101,7 +3019,7 @@ const handleDeposit = async (amount: number) => {
              
 
        {/* Deposit Modal */}
-    {showDepositModal && (
+{showDepositModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div className="bg-gradient-to-b from-[#1a1c2e] to-[#0d0f1d] rounded-xl w-full max-w-md border-2 border-blue-500/20 shadow-xl shadow-blue-500/10">
           <div className="p-4">
@@ -3336,33 +3254,58 @@ const handleDeposit = async (amount: number) => {
       )}
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-blue-500/20 safe-area-pb">
-        <div className="max-w-lg mx-auto px-2 md:px-4">
-          <div className="grid grid-cols-5 items-center">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg safe-area-pb">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent pointer-events-none"></div>
+        
+        <div className="max-w-lg mx-auto px-4 relative">
+          <div className="grid grid-cols-5 items-center py-2">
             {[
-              { id: 'home', text: 'Home', Icon: AiOutlineHome },
+              { id: 'home', text: 'Main', Icon: AiOutlineHome },
               { id: 'tasks', text: 'Tasks', Icon: GiScrollUnfurled },
               { id: 'airdrop', text: 'Airdrop', Icon: GiParachute },
-              { id: 'network', text: 'Referral', Icon: FaUserPlus },
+              { id: 'network', text: 'Network', Icon: FaUserPlus },
               { id: 'token', text: 'Token', Icon: BsCoin },
-              // { id: 'admin', text: 'Admin', Icon: FaUserCog },
             ].map(({ id, text, Icon }) => (
               <button 
                 key={id} 
                 onClick={() => setCurrentTab(id)}
-                className={`flex flex-col items-center py-3 md:py-4 w-full transition-all duration-300 ${
-                  currentTab === id ? 'text-blue-400' : 'text-gray-500'
+                className={`group flex flex-col items-center py-3 w-full transition-all duration-200 relative ${
+                  currentTab === id 
+                    ? 'text-blue-600' 
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                <Icon size={18} className="mb-1" />
-                <span className="text-[10px] md:text-xs font-medium tracking-wide truncate max-w-[64px] text-center">
+                {/* Active tab background */}
+                {currentTab === id && (
+                  <div className="absolute inset-0 bg-blue-50/50 rounded-xl mx-2"></div>
+                )}
+                
+                <div className={`relative transition-all duration-200 ${
+                  currentTab === id ? 'scale-110' : 'group-hover:scale-105'
+                }`}>
+                  <Icon 
+                    size={currentTab === id ? 22 : 20} 
+                    className={`transition-all duration-200 ${
+                      currentTab === id ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+                    }`} 
+                  />
+                  {/* Active indicator dot */}
+                  {currentTab === id && (
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-blue-600 rounded-full shadow-sm"></div>
+                  )}
+                </div>
+                
+                <span className={`text-[10px] font-semibold tracking-wide truncate max-w-[70px] text-center mt-1 transition-all duration-200 relative z-10 ${
+                  currentTab === id ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
+                }`}>
                   {text}
-                  </span>
+                </span>
               </button>
             ))}
           </div>
-                </div>
-              </div>
+        </div>
+      </div>
 
         {/* Add Snackbar component before closing div */}
         {isSnackbarVisible && (

@@ -148,7 +148,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
           </div>
           <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
             <div className="text-xs text-white/60 mb-1">Airdrop Balance</div>
-            <div className="text-base font-semibold text-purple-300">{Number(airdropBalanceNova ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NOVA</div>
+            <div className="text-base font-semibold text-purple-300">{Number(airdropBalanceNova ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TAPPS</div>
           </div>
         </div>
       </div>
