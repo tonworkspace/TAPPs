@@ -7,7 +7,6 @@ import { EnvUnsupported } from '@/components/EnvUnsupported.tsx';
 import { init } from '@/init.ts';
 
 
-import '@telegram-apps/telegram-ui/dist/styles.css';
 import './index.css';
 
 // Mock the environment in case, we are outside Telegram.
