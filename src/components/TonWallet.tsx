@@ -198,24 +198,22 @@ const TonWallet = () => {
   if (!connectedAddress) {
     return (
       <div className="w-full max-w-md mx-auto p-4">
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="p-6 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-              <Wallet className="w-8 h-8 text-white" />
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+          <div className="p-8 text-center bg-gradient-to-b from-gray-50 to-white">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <Wallet className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-            <p className="text-slate-400 mb-6">Connect your TON wallet to manage your digital assets</p>
-            
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <TonConnectButton className="relative !min-h-[48px] !px-6 !py-3" />
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Connect Your Wallet</h2>
+            <p className="text-gray-600 mb-8 text-base">Connect your TON wallet to manage your digital assets</p>
+
+            <div className="relative group inline-block">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition duration-300"></div>
+              <TonConnectButton className="relative !min-h-[52px] !px-8 !py-3" />
             </div>
           </div>
 
-          {/* Features */}
-          <div className="p-6 border-t border-slate-700">
-            <h3 className="text-lg font-semibold text-white mb-4">Wallet Features</h3>
+          <div className="p-8 bg-white border-t border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Wallet Features</h3>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { icon: Shield, title: "Secure", desc: "Your keys, your crypto" },
@@ -223,10 +221,10 @@ const TonWallet = () => {
                 { icon: Globe, title: "Multi-chain", desc: "TON ecosystem" },
                 { icon: Star, title: "Jettons", desc: "Token management" }
               ].map((feature, index) => (
-                <div key={index} className="p-3 bg-slate-800/50 rounded-xl border border-slate-700">
-                  <feature.icon className="w-6 h-6 text-blue-400 mb-2" />
-                  <h4 className="text-sm font-medium text-white">{feature.title}</h4>
-                  <p className="text-xs text-slate-400">{feature.desc}</p>
+                <div key={index} className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                  <feature.icon className="w-7 h-7 text-blue-500 mb-3" />
+                  <h4 className="text-sm font-bold text-gray-900 mb-1">{feature.title}</h4>
+                  <p className="text-xs text-gray-600">{feature.desc}</p>
                 </div>
               ))}
             </div>
@@ -237,101 +235,105 @@ const TonWallet = () => {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-2">
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden">
-        {/* Top Header and Balance */}
-        <div className="p-6 border-b border-slate-700">
+    <div className="w-full max-w-md mx-auto p-4">
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
+        <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-300">TAPPs Wallet</h2>
-              <div className="mt-2 text-4xl font-bold text-white">
+              <h2 className="text-base font-medium text-gray-600">TAPPs Wallet</h2>
+              <div className="mt-3 text-5xl font-bold text-black tracking-tight">
                 {formatBalance(`$${portfolioValue.toFixed(2)}`, hideBalances)}
               </div>
-              <p className="mt-1 text-sm text-slate-400">{formatAddress(connectedAddressString)}</p>
+              <p className="mt-2 text-sm text-gray-500 font-mono">{formatAddress(connectedAddressString)}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setHideBalances(!hideBalances)}
-                className="p-2 hover:bg-slate-700 rounded-xl transition-colors"
+                className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200"
                 title={hideBalances ? 'Show balances' : 'Hide balances'}
               >
-                {hideBalances ? <EyeOff className="w-5 h-5 text-slate-400" /> : <Eye className="w-5 h-5 text-slate-400" />}
+                {hideBalances ? <EyeOff className="w-5 h-5 text-gray-600" /> : <Eye className="w-5 h-5 text-gray-600" />}
               </button>
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="p-2 hover:bg-slate-700 rounded-xl transition-colors"
+                className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200"
                 title="Refresh"
               >
-                <RefreshCw className={`w-5 h-5 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-5 h-5 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-6 py-5 bg-white">
           <div className="grid grid-cols-4 gap-3">
             <button
               onClick={() => window.open('https://tonkeeper.com', '_blank')}
-              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-slate-300 hover:bg-slate-700/60 transition-colors"
+              className="flex flex-col items-center gap-2.5 py-4 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-gray-900 hover:border-blue-300 hover:shadow-md transition-all duration-200"
             >
-              <PlusCircle className="w-5 h-5" />
-              <span className="text-xs">Buy</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <PlusCircle className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-medium">Buy</span>
             </button>
             <button
               onClick={() => setIsSendModalOpen(true)}
-              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-slate-300 hover:bg-slate-700/60 transition-colors"
+              className="flex flex-col items-center gap-2.5 py-4 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-gray-900 hover:border-blue-300 hover:shadow-md transition-all duration-200"
             >
-              <ArrowUpRight className="w-5 h-5" />
-              <span className="text-xs">Send</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <ArrowUpRight className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-medium">Send</span>
             </button>
             <button
               onClick={() => setIsReceiveModalOpen(true)}
-              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-slate-300 hover:bg-slate-700/60 transition-colors"
+              className="flex flex-col items-center gap-2.5 py-4 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-gray-900 hover:border-blue-300 hover:shadow-md transition-all duration-200"
             >
-              <ArrowDownLeft className="w-5 h-5" />
-              <span className="text-xs">Receive</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <ArrowDownLeft className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-medium">Receive</span>
             </button>
             <button
               onClick={() => window.open('https://dedust.io', '_blank')}
-              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-slate-300 hover:bg-slate-700/60 transition-colors"
+              className="flex flex-col items-center gap-2.5 py-4 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-gray-900 hover:border-blue-300 hover:shadow-md transition-all duration-200"
             >
-              <ArrowLeftRight className="w-5 h-5" />
-              <span className="text-xs">Swap</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <ArrowLeftRight className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-medium">Swap</span>
             </button>
           </div>
         </div>
 
-        {/* Assets List */}
-        <div className="px-6 pb-6">
-          <div className="space-y-3">
-            {/* TON Row */}
-            <div className="flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700">
+        <div className="px-6 pb-6 bg-white">
+          <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Assets</h3>
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-blue-400" />
+                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
+                  <Wallet className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h4 className="text-white font-medium">TON</h4>
-                  <p className="text-xs text-slate-400">$ {(tonUsdPrice || 0).toFixed(2)}</p>
+                  <h4 className="text-gray-900 font-bold">TON</h4>
+                  <p className="text-xs text-gray-500 font-medium">${(tonUsdPrice || 0).toFixed(2)}</p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-white font-medium">
+                <div className="text-gray-900 font-bold">
                   {isLoadingTON ? '...' : formatBalance(tonBalance, hideBalances)}
                 </div>
-                <p className="text-xs text-slate-400">${(parseFloat(tonBalance || '0') * (tonUsdPrice || 0)).toFixed(2)}</p>
+                <p className="text-xs text-gray-500 font-medium">${(parseFloat(tonBalance || '0') * (tonUsdPrice || 0)).toFixed(2)}</p>
               </div>
             </div>
 
-            {/* Jettons */}
             {isLoadingJettons ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {[1,2,3].map((i) => (
-                  <div key={i} className="p-4 bg-slate-800/60 rounded-xl border border-slate-700 animate-pulse">
-                    <div className="h-5 w-28 bg-slate-700 rounded mb-2"></div>
-                    <div className="h-4 w-16 bg-slate-700 rounded"></div>
+                  <div key={i} className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 animate-pulse">
+                    <div className="h-5 w-28 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 w-16 bg-gray-200 rounded"></div>
                   </div>
                 ))}
               </div>
@@ -348,10 +350,10 @@ const TonWallet = () => {
                   <button
                     key={jetton.jetton.address.toString()}
                     onClick={() => handleJettonClick(jetton)}
-                    className="w-full flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700 hover:border-slate-600 hover:shadow-lg transition-all duration-200 text-left group"
+                    className="w-full flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center overflow-hidden">
+                      <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
                         {enhancedJetton.jetton.image ? (
                           <img
                             src={enhancedJetton.jetton.image}
@@ -362,17 +364,17 @@ const TonWallet = () => {
                             }}
                           />
                         ) : (
-                          <span className="text-white font-bold">{enhancedJetton.jetton.symbol?.[0] || '?'}</span>
+                          <span className="text-blue-600 font-bold text-lg">{enhancedJetton.jetton.symbol?.[0] || '?'}</span>
                         )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="text-white font-medium">{enhancedJetton.jetton.name}</h4>
+                          <h4 className="text-gray-900 font-bold">{enhancedJetton.jetton.name}</h4>
                           {enhancedJetton.jetton.verified && (
-                            <Shield className="w-3 h-3 text-green-400" />
+                            <Shield className="w-4 h-4 text-blue-500" />
                           )}
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-gray-500 font-medium">
                           {enhancedJetton.jetton.verified ? 
                             `Verified • $${(registryData?.rateUsd || 0).toFixed(6)}` : 
                             'Unverified Token'
@@ -381,10 +383,10 @@ const TonWallet = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-white font-medium">
+                      <div className="text-gray-900 font-bold">
                         {formatBalance(toDecimals(jetton.balance, jetton.jetton.decimals), hideBalances)}
                       </div>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-gray-500 font-medium">
                         ${usdValue.toFixed(2)}
                       </p>
                     </div>
@@ -398,24 +400,24 @@ const TonWallet = () => {
 
       {/* Send TON Modal */}
       {isSendModalOpen && connectedAddress && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
           onClick={() => setIsSendModalOpen(false)}>
           <div onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden border border-slate-700 shadow-2xl">
-            <div className="p-6 border-b border-slate-700">
+            className="bg-white rounded-3xl max-w-md w-full overflow-hidden border border-gray-200 shadow-2xl">
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <ArrowUpRight className="w-5 h-5 text-blue-400" />
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <ArrowUpRight className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Send TON</h2>
-                    <p className="text-sm text-slate-400">Available: {tonBalance} TON</p>
+                    <h2 className="text-xl font-bold text-gray-900">Send TON</h2>
+                    <p className="text-sm text-gray-600">Available: {tonBalance} TON</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsSendModalOpen(false)}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-xl"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -447,20 +449,20 @@ const TonWallet = () => {
             }}>
               <div className="p-6 space-y-6">
                 <div>
-                  <label className="block text-sm text-slate-300 mb-2 font-medium">
+                  <label className="block text-sm text-gray-700 mb-2 font-bold">
                     Recipient Address
                   </label>
                   <input
                     name="address"
                     type="text"
                     placeholder="Enter TON address"
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-300 mb-2 font-medium">
+                  <label className="block text-sm text-gray-700 mb-2 font-bold">
                     Amount
                   </label>
                   <div className="relative">
@@ -470,7 +472,7 @@ const TonWallet = () => {
                       step="0.000000001"
                       min="0"
                       placeholder="0.0"
-                      className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                       required
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -480,7 +482,7 @@ const TonWallet = () => {
                           const input = document.querySelector('input[name="amount"]') as HTMLInputElement;
                           input.value = tonBalance;
                         }}
-                        className="text-sm text-blue-400 hover:text-blue-300 font-medium px-2 py-1 bg-blue-500/10 rounded-md hover:bg-blue-500/20 transition-all"
+                        className="text-sm text-blue-600 hover:text-blue-700 font-bold px-3 py-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all"
                       >
                         MAX
                       </button>
@@ -489,18 +491,18 @@ const TonWallet = () => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-slate-700 bg-slate-800/70">
-                <div className="flex space-x-4">
+              <div className="p-6 border-t border-gray-100 bg-gray-50">
+                <div className="flex space-x-3">
                   <button
                     type="button"
                     onClick={() => setIsSendModalOpen(false)}
-                    className="flex-1 px-4 py-3 border border-slate-600 rounded-xl text-slate-300 hover:bg-slate-700 transition-all duration-300 text-sm font-medium"
+                    className="flex-1 px-4 py-3.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-white hover:border-gray-400 transition-all duration-200 text-sm font-bold"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 rounded-xl text-white text-sm font-medium flex items-center justify-center space-x-2 transition-all duration-300"
+                    className="flex-1 px-4 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 rounded-xl text-white text-sm font-bold flex items-center justify-center space-x-2 transition-all duration-200 shadow-lg shadow-blue-500/30"
                   >
                     <ArrowUpRight className="w-4 h-4" />
                     <span>Send TON</span>
@@ -543,58 +545,58 @@ const TonWallet = () => {
 
       {/* Receive Modal */}
       {isReceiveModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
           onClick={() => setIsReceiveModalOpen(false)}>
           <div onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900 rounded-2xl max-w-md w-full overflow-hidden border border-slate-700 shadow-2xl">
-            <div className="p-6 border-b border-slate-700">
+            className="bg-white rounded-3xl max-w-md w-full overflow-hidden border border-gray-200 shadow-2xl">
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <Download className="w-5 h-5 text-green-400" />
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <Download className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Receive TON</h2>
-                    <p className="text-sm text-slate-400">Share your address to receive funds</p>
+                    <h2 className="text-xl font-bold text-gray-900">Receive TON</h2>
+                    <p className="text-sm text-gray-600">Share your address to receive funds</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsReceiveModalOpen(false)}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-xl"
                 >
                   <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 bg-white">
               <div className="text-center">
-                <div className="bg-white p-4 rounded-2xl mb-4 inline-block">
+                <div className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-2xl mb-6 inline-block border-2 border-gray-200 shadow-lg">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${connectedAddressString}`}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${connectedAddressString}`}
                     alt="Wallet Address QR Code"
-                    className="w-32 h-32"
+                    className="w-40 h-40"
                   />
                 </div>
-                
-                <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 mb-4">
-                  <p className="text-sm text-slate-400 mb-2">Your TON Address</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-white font-mono text-sm break-all flex-1">{connectedAddressString}</p>
+
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-5 border border-gray-200 mb-6">
+                  <p className="text-sm text-gray-600 mb-3 font-bold">Your TON Address</p>
+                  <div className="flex items-center gap-2 bg-white p-3 rounded-xl border border-gray-200">
+                    <p className="text-gray-900 font-mono text-xs break-all flex-1">{connectedAddressString}</p>
                     <button
                       onClick={handleCopyAddress}
-                      className="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors"
+                      className="p-2.5 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
                     >
                       {copySuccess ? (
-                        <Check className="w-4 h-4 text-green-400" />
+                        <Check className="w-5 h-5 text-blue-600" />
                       ) : (
-                        <Copy className="w-4 h-4 text-slate-400" />
+                        <Copy className="w-5 h-5 text-blue-600" />
                       )}
                     </button>
                   </div>
                 </div>
-                
-                <p className="text-sm text-slate-400">
+
+                <p className="text-sm text-gray-600">
                   Share this address to receive TON and other tokens in your wallet.
                 </p>
               </div>
