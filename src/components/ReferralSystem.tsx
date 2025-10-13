@@ -60,7 +60,7 @@ interface ReferrerStat {
 
 
 // Update the constant
-const ACTIVE_REFERRAL_REWARD = 5; // 5 NOVA per active referral
+const ACTIVE_REFERRAL_REWARD = 5; // 5 TAPPS per active referral
 
 // Add proper type for tree state
 interface TreeUser {
@@ -370,11 +370,15 @@ const ReferralSystem = () => {
   // Update the reward calculation function
   const calculateActiveReferralReward = (referrals: ReferralWithUsers[]): number => {
     return referrals.reduce((total, referral) => {
+      // Include both sbt_amount and total_sbt_earned
+      const referralEarning = (referral.sbt_amount || 0) + (referral.total_sbt_earned || 0);
+
       if (referral.status === 'active') {
-        // Premium users give 10 NOVA, others give 5
-        return total + (referral.referred?.is_premium ? 10 : ACTIVE_REFERRAL_REWARD);
+        // Premium users give 10 TAPPS, others give 5
+        const baseReward = referral.referred?.is_premium ? 10 : ACTIVE_REFERRAL_REWARD;
+        return total + baseReward + referralEarning;
       }
-      return total;
+      return total + referralEarning;
     }, 0);
   };
 
@@ -766,10 +770,10 @@ const ReferralSystem = () => {
                       </div>
                       
                       {/* Amount */}
-                      <p className="text-2xl font-bold text-green-500">{activeReferralReward}</p>
-                      
+                      <p className="text-2xl font-bold text-green-500">{activeReferralReward.toFixed(2)}</p>
+
                       {/* Token Name */}
-                      <span className="text-sm font-medium text-green-500/80">NOVA</span>
+                      <span className="text-sm font-medium text-green-500/80">TAPPS</span>
                     </div>
                   </div>
                  
