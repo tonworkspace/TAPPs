@@ -1,7 +1,7 @@
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { toUserFriendlyAddress } from '@tonconnect/sdk';
 import { FC, useState, useEffect, useRef } from 'react';
-import { FaAtom, FaChargingStation, FaGem, FaTasks, FaWallet } from 'react-icons/fa';
+import { FaAtom, FaGem, FaNetworkWired, FaTasks, FaWallet } from 'react-icons/fa';
 import { MdDiamond } from 'react-icons/md';
 // import { BiNetworkChart } from 'react-icons/bi';
 import { TonConnectButton, } from '@tonconnect/ui-react';
@@ -201,7 +201,7 @@ interface Activity {
 const MAINNET_DEPOSIT_ADDRESS = 'UQA87z9UyLuHlZigPZlBDQgYmEENvktnkYkEvP0CJaVf8E3u';
 const TESTNET_DEPOSIT_ADDRESS = 'UQA87z9UyLuHlZigPZlBDQgYmEENvktnkYkEvP0CJaVf8E3u';
 
-const isMainnet = true; // You can toggle this for testing
+const isMainnet = false; // You can toggle this for testing
 
 // Use the appropriate address based on network
 const DEPOSIT_ADDRESS = isMainnet ? MAINNET_DEPOSIT_ADDRESS : TESTNET_DEPOSIT_ADDRESS;
@@ -2728,31 +2728,41 @@ const handleDeposit = async (amount: number) => {
         )}
 
         {currentTab === 'network' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+          <div className="flex-1 p-4 p-custom sm:p-6 overflow-y-auto bg-slate-50">
             <ReferralSystem 
             />
           </div>
         )}
 
         {currentTab === 'airdrop' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+          <div className="flex-1 p-4 p-custom  sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
             <NewsComponent/>
           </div>
         )}
 
         {currentTab === 'tasks' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+          <div className="flex-1 p-4 p-custom  sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
             {/* Content */}
             <div className="relative">
-              <SocialTasks showSnackbar={showSnackbar}/>
+              <SocialTasks 
+                showSnackbar={showSnackbar}
+                userId={user?.id}
+                onRewardClaimed={(amount) => {
+                  // Refresh user data to update airdrop balance
+                  if (user?.id) {
+                    // You can add a refresh function here if needed
+                    console.log(`Reward claimed: ${amount} TAPPS`);
+                  }
+                }}
+              />
             </div>
           </div>
         )}
 
         {currentTab === 'token' && (
-          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
+          <div className="flex-1 p-4 p-custom  sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
             {/* Content */}
             <div className="relative">
@@ -3147,18 +3157,18 @@ const handleDeposit = async (amount: number) => {
                 gradient: 'from-blue-500 to-cyan-500'
               },
               { 
+                id: 'network', 
+                text: 'Network', 
+                Icon: FaNetworkWired,
+                premium: false,
+                gradient: 'from-indigo-500 to-purple-500'
+              },
+              { 
                 id: 'tasks', 
                 text: 'Bonus', 
                 Icon: FaTasks,
                 premium: false,
                 gradient: 'from-green-500 to-emerald-500'
-              },
-              { 
-                id: 'network', 
-                text: 'Network', 
-                Icon: FaChargingStation,
-                premium: false,
-                gradient: 'from-indigo-500 to-purple-500'
               },
               { 
                 id: 'airdrop', 

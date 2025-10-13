@@ -154,10 +154,40 @@ export const useAuth = () => {
           )
         `)
         .eq('telegram_id', telegramId)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid errors
 
-      // Handle user creation if needed
-      if (fetchError && fetchError.code === 'PGRST116') { // No rows found
+      // Handle user creation if needed - only if user truly doesn't exist
+      if (!existingUser && (!fetchError || fetchError.code === 'PGRST116')) { // User doesn't exist
+        // Double-check if user actually exists to prevent duplicates
+        const { data: doubleCheckUser, error: doubleCheckError } = await supabase
+          .from('users')
+          .select('id, telegram_id')
+          .eq('telegram_id', telegramId)
+          .maybeSingle();
+
+        if (doubleCheckUser) {
+          console.log('User already exists, fetching full data for telegram_id:', telegramId);
+          // User exists, fetch full data
+          const { data: fullUser, error: fullFetchError } = await supabase
+            .from('users')
+            .select(`
+              *,
+              referrer:users!referrer_id(
+                username,
+                rank
+              )
+            `)
+            .eq('telegram_id', telegramId)
+            .single();
+
+          if (fullFetchError) {
+            console.error('Error fetching existing user:', fullFetchError);
+            throw new Error(`Failed to fetch existing user: ${fullFetchError.message}`);
+          }
+
+          return fullUser;
+        }
+
         console.log('Creating new user for telegram_id:', telegramId);
         
         // Add more detailed logging
@@ -284,8 +314,8 @@ export const useAuth = () => {
           last_login_date: new Date().toISOString()
         });
         
-      } else if (fetchError) {
-        // Handle other fetch errors
+      } else if (fetchError && fetchError.code !== 'PGRST116') {
+        // Handle other fetch errors (not "no rows found")
         console.error('Error fetching user:', fetchError);
         throw new Error('Failed to fetch user data');
       } else if (existingUser) {

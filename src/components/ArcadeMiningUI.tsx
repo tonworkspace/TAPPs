@@ -117,15 +117,27 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                 </div>
               </div>
             </div>
-            <button
-              onClick={onOpenDeposit}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span className="text-sm font-semibold">START MINING</span>
-            </button>
+            {isStaked ? (
+                 <button
+                 onClick={onOpenDeposit}
+                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors duration-200"
+               >
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                 </svg>
+                 <span className="text-sm font-semibold">TOP UP</span>
+               </button>
+                ) : (
+                  <button
+                  onClick={onOpenDeposit}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="text-sm font-semibold">START</span>
+                </button>
+                )}
           </div>
 
           {/* Compact Tabs */}
@@ -142,12 +154,6 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                 className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'activity' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
               >
                 Activity
-              </button>
-              <button
-                onClick={() => setActiveTab('referral')}
-                className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'referral' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
-              >
-                Invite
               </button>
             </div>
           </div>
@@ -258,7 +264,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
 
               {/* Referral Stats */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                <div className="text-sm font-bold text-slate-700 mb-3">📊 My Network</div>
+                <div className="text-sm font-bold text-slate-700 mb-3">📊 My  Network</div>
                 <div className="grid grid-cols-1 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">{referralStats.active}</div>
@@ -356,6 +362,9 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                     <span>Deposit to Start Mining</span>
                   </>
                 )}
+
+                
+
               </div>
             </button>
             {/* {isStaked && (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 interface Task {
   id: number;
@@ -9,13 +10,17 @@ interface Task {
   isCompleted: boolean;
   validationTimer?: number;
   description: string;
+  completedAt?: string;
+  rewardClaimed?: boolean;
 }
 
 interface Props {
   showSnackbar: (config: { message: string; description?: string }) => void;
+  userId?: number;
+  onRewardClaimed?: (amount: number) => void;
 }
 
-const SocialTasks = ({ showSnackbar }: Props) => {
+const SocialTasks = ({ showSnackbar, userId, onRewardClaimed }: Props) => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,49 +30,114 @@ const SocialTasks = ({ showSnackbar }: Props) => {
   const [isClaimingAllRewards, setIsClaimingAllRewards] = useState(false);
   const [allTasksCompleted, setAllTasksCompleted] = useState(false);
   const [hasClaimedAllRewards, setHasClaimedAllRewards] = useState(false);
-  const [compact, setCompact] = useState(false);
+  const [compact] = useState(false);
 
+  // Load user's completed tasks from database
   useEffect(() => {
-    setTasks([
-      {
-        id: 1,
-        platform: 'Telegram',
-        action: 'Join TAPPS Telegram Group',
-        reward: 10000,
-        link: 'https://t.me/TAPPs_Chat',
-        isCompleted: false,
-        description: 'Join our vibrant community and stay updated!'
-      },
-      {
-        id: 2,
-        platform: 'Telegram',
-        action: 'Join TAPPS Telegram Channel',
-        reward: 10000,
-        link: 'https://t.me/TAPPs_News',
-        isCompleted: false,
-        description: 'Stay connected with the latest updates!'
-      },
-      {
-        id: 3,
-        platform: 'Twitter',
-        action: 'Follow TAPPS on X/Twitter',
-        reward: 10000,
-        link: 'https://x.com/TAPP_Whale',
-        isCompleted: false,
-        description: 'Follow us on X for the latest news and updates!'
-      },
-      {
-        id: 4,
-        platform: 'Facebook',
-        action: 'Like TAPPS Whale Facebook Page',
-        reward: 10000,
-        link: 'https://web.facebook.com/TAPPsWeb3',
-        isCompleted: false,
-        description: 'Show your support by liking our Facebook page!'
-      },
-    ]);
-    setTimeout(() => setIsInitialLoading(false), 1000);
-  }, []);
+    const loadUserTasks = async () => {
+      if (!userId) {
+        // Set default tasks without database loading
+        setTasks(getDefaultTasks());
+        setTimeout(() => setIsInitialLoading(false), 1000);
+        return;
+      }
+
+      try {
+        // Get user's completed tasks
+        const { data: completedTasks, error } = await supabase
+          .from('completed_tasks')
+          .select('task_id, completed_at, reward_claimed')
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error loading completed tasks:', error);
+        }
+
+        // Map completed tasks to our task structure
+        const completedTaskIds = new Set(completedTasks?.map(ct => ct.task_id) || []);
+        const completedTaskDetails = new Map(completedTasks?.map(ct => [ct.task_id, ct]) || []);
+
+        // Check if user has claimed the bonus (task_id: -1)
+        const hasClaimedBonus = completedTaskIds.has(-1);
+
+        const defaultTasks = getDefaultTasks();
+        const tasksWithCompletion = defaultTasks.map(task => {
+          const isCompleted = completedTaskIds.has(task.id);
+          const taskDetails = completedTaskDetails.get(task.id);
+          
+          return {
+            ...task,
+            isCompleted,
+            completedAt: taskDetails?.completed_at,
+            rewardClaimed: taskDetails?.reward_claimed || false
+          };
+        });
+
+        setTasks(tasksWithCompletion);
+        setHasClaimedAllRewards(hasClaimedBonus);
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+        setTasks(getDefaultTasks());
+      } finally {
+        setTimeout(() => setIsInitialLoading(false), 1000);
+      }
+    };
+
+    loadUserTasks();
+  }, [userId]);
+
+  const getDefaultTasks = (): Task[] => [
+    {
+      id: 1,
+      platform: 'Telegram',
+      action: 'Join TAPPS Telegram Group',
+      reward: 10000,
+      link: 'https://t.me/TAPPs_Chat',
+      isCompleted: false,
+      description: 'Join our vibrant community and stay updated with the latest news!',
+      rewardClaimed: false
+    },
+    {
+      id: 2,
+      platform: 'Telegram',
+      action: 'Join TAPPS Telegram Channel',
+      reward: 10000,
+      link: 'https://t.me/TAPPs_News',
+      isCompleted: false,
+      description: 'Stay connected with official announcements and updates!',
+      rewardClaimed: false
+    },
+    {
+      id: 3,
+      platform: 'Twitter',
+      action: 'Follow TAPPS on X/Twitter',
+      reward: 15000,
+      link: 'https://x.com/TAPPsWhale',
+      isCompleted: false,
+      description: 'Follow us on X for the latest news, updates, and community discussions!',
+      rewardClaimed: false
+    },
+    {
+      id: 4,
+      platform: 'Facebook',
+      action: 'Like TAPPS Whale Facebook Page',
+      reward: 10000,
+      link: 'https://web.facebook.com/TAPPsWeb3',
+      isCompleted: false,
+      description: 'Show your support by liking our Facebook page and joining our community!',
+      rewardClaimed: false
+    },
+    // {
+    //   id: 5,
+    //   platform: 'Discord',
+    //   action: 'Join TAPPS Discord Server',
+    //   reward: 12000,
+    //   link: 'https://discord.gg/tapps',
+    //   isCompleted: false,
+    //   description: 'Connect with fellow TAPPS community members on Discord!',
+    //   rewardClaimed: false
+    // }
+  ];
 
   useEffect(() => {
     if (tasks.length > 0) {
@@ -97,29 +167,72 @@ const SocialTasks = ({ showSnackbar }: Props) => {
   }, [timers]);
 
   const handleTaskCompletion = async (taskId: number) => {
+    if (!userId) {
+      showSnackbar({
+        message: 'Authentication Required',
+        description: 'Please log in to claim rewards.'
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const task = tasks.find(t => t.id === taskId);
       if (!task) throw new Error('Task not found');
 
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('completed_tasks')
+        .insert({
+          user_id: userId,
+          task_id: taskId,
+          completed_at: new Date().toISOString(),
+          status: 'COMPLETED',
+          reward_claimed: true
+        });
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw new Error('Failed to save task completion');
+      }
+
+      // Update user's airdrop balance
+      const { error: balanceError } = await supabase.rpc('increment_sbt', {
+        user_id: userId,
+        amount: task.reward
+      });
+
+      if (balanceError) {
+        console.error('Balance update error:', balanceError);
+        // Don't throw error here, just log it
+      }
+
+      // Update local state
       setTasks(prev => prev.map(t =>
-        t.id === taskId ? { ...t, isCompleted: true } : t
+        t.id === taskId ? { 
+          ...t, 
+          isCompleted: true, 
+          rewardClaimed: true,
+          completedAt: new Date().toISOString()
+        } : t
       ));
+
+      // Trigger reward callback
+      if (onRewardClaimed) {
+        onRewardClaimed(task.reward);
+      }
 
       setConfetti(taskId);
       setTimeout(() => setConfetti(null), 3000);
 
       showSnackbar({
-        message: 'Task Completed!',
-        description: `You earned ${task.reward.toLocaleString()} TAPPS tokens!`
+        message: '🎉 Task Completed!',
+        description: `You earned ${task.reward.toLocaleString()} TAPPS tokens! Check your airdrop balance.`
       });
     } catch (error) {
       console.error('Error completing task:', error);
-      setTasks(prev => prev.map(t =>
-        t.id === taskId ? { ...t, isCompleted: false } : t
-      ));
       showSnackbar({
-        message: 'Error',
+        message: '❌ Error',
         description: 'Failed to complete task. Please try again.'
       });
     } finally {
@@ -153,6 +266,12 @@ const SocialTasks = ({ showSnackbar }: Props) => {
             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
           </svg>
         );
+      case 'discord':
+        return (
+          <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+        );
       case 'youtube':
         return (
           <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
@@ -165,21 +284,57 @@ const SocialTasks = ({ showSnackbar }: Props) => {
   };
 
   const handleClaimAllRewards = async () => {
-    if (!allTasksCompleted || hasClaimedAllRewards) return;
+    if (!allTasksCompleted || hasClaimedAllRewards || !userId) return;
+    
     setIsClaimingAllRewards(true);
     try {
+      const bonusAmount = 25000;
+      
+      // Update user's airdrop balance with bonus
+      const { error: balanceError } = await supabase.rpc('increment_sbt', {
+        user_id: userId,
+        amount: bonusAmount
+      });
+
+      if (balanceError) {
+        console.error('Bonus balance update error:', balanceError);
+        throw new Error('Failed to update bonus balance');
+      }
+
+      // Save the bonus claim status to database
+      const { error: claimError } = await supabase
+        .from('completed_tasks')
+        .insert({
+          user_id: userId,
+          task_id: -1, // Special ID for "claim all rewards" bonus
+          completed_at: new Date().toISOString(),
+          status: 'COMPLETED',
+          reward_claimed: true
+        });
+
+      if (claimError) {
+        console.error('Error saving bonus claim:', claimError);
+        // Don't throw error here, just log it
+      }
+
+      // Trigger reward callback
+      if (onRewardClaimed) {
+        onRewardClaimed(bonusAmount);
+      }
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       setConfetti(-1);
       setTimeout(() => setConfetti(null), 5000);
+      
       showSnackbar({
-        message: 'All Tasks Completed!',
-        description: 'Congratulations! You earned a bonus of 25,000 TAPPS tokens!'
+        message: '🎊 All Tasks Completed!',
+        description: `Congratulations! You earned a bonus of ${bonusAmount.toLocaleString()} TAPPS tokens!`
       });
       setHasClaimedAllRewards(true);
     } catch (error) {
       console.error('Error claiming all rewards:', error);
       showSnackbar({
-        message: 'Error',
+        message: '❌ Error',
         description: 'Failed to claim bonus reward. Please try again.'
       });
     } finally {
@@ -226,14 +381,14 @@ const SocialTasks = ({ showSnackbar }: Props) => {
       <div className={compact ? "space-y-3" : "space-y-6"}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Daily Social Tasks</h3>
-              <p className="text-xs text-gray-500">Complete tasks to earn rewards</p>
+              <h3 className="text-xl font-bold text-gray-900">Social Engagement</h3>
+              <p className="text-sm text-gray-600">Complete social tasks to earn TAPPS rewards.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -246,12 +401,12 @@ const SocialTasks = ({ showSnackbar }: Props) => {
                 {isClaimingAllRewards ? 'Claiming...' : 'Claim 25K Bonus'}
               </button>
             )}
-            <button
+            {/* <button
               onClick={() => setCompact(v => !v)}
               className="px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition-colors"
             >
               {compact ? 'Expand' : 'Compact'}
-            </button>
+            </button> */}
           </div>
         </div>
 
