@@ -19,26 +19,26 @@ export const OnboardingScreen: FC = () => {
   const steps: OnboardingStep[] = [
     {
       icon: <FaRocket className="w-12 h-12" />,
-      title: `Welcome to Stakenova${user?.first_name ? ` ${user.first_name}` : ''}!`,
-      description: "Embark on an epic journey through the Staking Universe",
+      title: `Welcome to TAPPS Mine${user?.first_name ? ` ${user.first_name}` : ''}!`,
+      description: "Start mining TAPPS tokens and earn rewards",
       color: "from-blue-500 to-purple-600"
     },
     {
       icon: <FaChartLine className="w-12 h-12" />,
-      title: "Stellar Rewards",
-      description: "Watch your TON balance grow like exploding supernovas",
+      title: "Grow Your Earnings",
+      description: "Watch your TAPPS tokens multiply with every mine",
       color: "from-green-500 to-emerald-600"
     },
     {
       icon: <FaUsers className="w-12 h-12" />,
-      title: "Cosmic Community",
-      description: "Join fellow astronauts in your mission to prosperity",
+      title: "Build Your Network",
+      description: "Invite friends and earn referral bonuses together",
       color: "from-purple-500 to-pink-600"
     },
     {
       icon: <FaGem className="w-12 h-12" />,
-      title: "Galactic Benefits",
-      description: "Unlock rare treasures and celestial bonuses",
+      title: "Unlock Rewards",
+      description: "Complete tasks and claim exclusive bonuses",
       color: "from-amber-500 to-orange-600"
     }
   ];
@@ -118,12 +118,12 @@ export const OnboardingScreen: FC = () => {
             </div>
             <div className="mt-8 text-center">
               <h2 className="text-2xl sm:text-3xl font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                {user?.total_deposit === 0 ? 'Preparing for Launch' : 'Welcome Back, Explorer!'}
+                {user?.total_deposit === 0 ? 'Starting Your Mine' : 'Welcome Back, Miner!'}
               </h2>
               <p className="mt-4 text-lg text-gray-300">
-                {user?.total_deposit === 0 
-                  ? 'Initializing your space journey...'
-                  : 'Accessing your command center...'}
+                {user?.total_deposit === 0
+                  ? 'Setting up your mining operation...'
+                  : 'Loading your mining dashboard...'}
               </p>
             </div>
           </div>

@@ -295,8 +295,9 @@ const TonWallet = () => {
 
   return (
     <div className="w-full max-w-md mx-auto p-2">
-      <div className="rounded-3xl overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white">
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden">
+        {/* Top Header and Balance */}
+        <div className="p-6 border-b border-slate-700">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-base font-medium text-gray-600">TAPPs Wallet</h2>
@@ -325,11 +326,12 @@ const TonWallet = () => {
           </div>
         </div>
 
-        <div className="px-6 py-5">
+        {/* Quick Actions */}
+        <div className="px-6 pt-4 pb-2">
           <div className="grid grid-cols-4 gap-3">
             <button
-              onClick={() => window.open('#', '_blank')}
-              className="flex flex-col items-center gap-2.5 py-4 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 text-gray-900 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+              onClick={() => window.open('https://tonkeeper.com', '_blank')}
+              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-slate-800/60 border border-slate-700 text-slate-300 hover:bg-slate-700/60 transition-colors"
             >
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                 <PlusCircle className="w-5 h-5 text-blue-600" />
@@ -366,10 +368,11 @@ const TonWallet = () => {
           </div>
         </div>
 
+        {/* Assets List */}
         <div className="px-6 pb-6">
-          <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Assets</h3>
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+          <div className="space-y-3">
+            {/* TON Row */}
+            <div className="flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
                   <Wallet className="w-6 h-6 text-blue-600" />
@@ -408,8 +411,8 @@ const TonWallet = () => {
                 return (
                   <button
                     key={jetton.jetton.address.toString()}
-                    // onClick={() => handleJettonClick(jetton)}
-                    className="w-full flex items-center justify-between p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
+                    onClick={() => handleJettonClick(jetton)}
+                    className="w-full flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700 hover:border-slate-600 hover:shadow-lg transition-all duration-200 text-left group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
