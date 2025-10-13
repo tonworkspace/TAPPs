@@ -1,8 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Supabase initialization
-const supabaseUrl = "https://nubyccnpqfffihrnbhsm.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51YnljY25wcWZmZmlocm5iaHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1ODUxNDQsImV4cCI6MjA1NzE2MTE0NH0.POGLxhWVpOuQ3x7fk6rUYcpVgxcBkgAMzD7NQYignck";
+const supabaseUrl = "https://qaviehvidwbntwrecyky.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhdmllaHZpZHdibnR3cmVjeWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyMzE2MzYsImV4cCI6MjA3NTgwNzYzNn0.wnX-xdpD_P-Pxt-prIkpiX3DX8glSLwXZhbQWeUmc0g";
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -367,13 +367,13 @@ export const updateUserBalance = async (userId: number, amount: number, earnedAm
 export const setupStoredProcedures = async (userId: number) => {
   // First create referral procedure
   const { error: referralError } = await supabase.rpc('process_referral_v2', {
-    p_referrer_id: userId,
+    p_sponsor_id: userId,
     p_referred_id: userId
   });
 
   // Then create team volume procedures
   const { error: volumeError } = await supabase.rpc('update_team_volumes', {
-    p_referrer_ids: [userId],
+    p_sponsor_ids: [userId],
     p_amount: 0
   });
 
@@ -609,7 +609,7 @@ export const getReferralsByPlayer = async (userId: number) => {
         *,
         referred:users!referred_id(username)
       `)
-      .eq('referrer_id', userId);
+      .eq('sponsor_id', userId);
 
     if (error) throw error;
 
@@ -676,6 +676,163 @@ export const updateUserSBT = async (userId: number, amount: number, type: 'depos
   } catch (error) {
     console.error('Error updating SBT:', error);
     return null;
+  }
+};
+
+// Function to generate unique sponsor codes
+export const generateSponsorCode = (userId: number, username?: string): string => {
+  // Create a base code from user ID and username
+  const baseId = userId.toString().padStart(4, '0');
+  const usernamePart = username ? username.substring(0, 3).toUpperCase() : 'USR';
+  
+  // Generate a short unique identifier
+  const randomPart = Math.random().toString(36).substring(2, 5).toUpperCase();
+  
+  return `${usernamePart}-${baseId}${randomPart}`.substring(0, 8);
+};
+
+// Function to ensure user has a sponsor code
+export const ensureUserHasSponsorCode = async (userId: number, username?: string): Promise<string> => {
+  try {
+    // Check if user already has a sponsor code
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('sponsor_code, username')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching user:', fetchError);
+      return '';
+    }
+
+    // If user already has a sponsor code, return it
+    if (user?.sponsor_code) {
+      return user.sponsor_code;
+    }
+
+    // Check if this is the first user in the system
+    const { data: totalUsers } = await supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true });
+      
+    const { data: firstUser } = await supabase
+      .from('users')
+      .select('id')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single();
+
+    // Generate appropriate sponsor code
+    let sponsorCode: string;
+    if (totalUsers?.length === 1 || firstUser?.id === userId) {
+      // First user gets a special admin code
+      sponsorCode = `ADMIN-${userId.toString().padStart(4, '0')}`;
+    } else {
+      // Regular users get normal sponsor codes
+      sponsorCode = generateSponsorCode(userId, username || user?.username);
+    }
+    
+    // Update user with sponsor code
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ sponsor_code: sponsorCode })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error updating sponsor code:', updateError);
+      return '';
+    }
+
+    return sponsorCode;
+  } catch (error) {
+    console.error('Error ensuring sponsor code:', error);
+    return '';
+  }
+};
+
+// Function to generate default sponsor code for first user
+export const generateDefaultSponsorCode = async (userId: number): Promise<string> => {
+  try {
+    const defaultCode = `ADMIN-${userId.toString().padStart(4, '0')}`;
+    
+    // Update user with default sponsor code
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ sponsor_code: defaultCode })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error setting default sponsor code:', updateError);
+      return '';
+    }
+
+    return defaultCode;
+  } catch (error) {
+    console.error('Error generating default sponsor code:', error);
+    return '';
+  }
+};
+
+// Add function to process referral rewards for staking
+export const processReferralStakingRewards = async (userId: number, stakedAmount: number): Promise<void> => {
+  try {
+    // Get user's sponsor information
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('sponsor_id, username')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user || !user.sponsor_id) {
+      console.log('No sponsor found for user:', userId);
+      return;
+    }
+
+    // Calculate reward amount (1000 TAPPS or 10% of staked amount, whichever is higher)
+    const rewardAmount = Math.max(1000, stakedAmount * 0.1);
+
+    // Update sponsor's balance with TAPPS reward
+    const { error: balanceError } = await supabase.rpc('increment_balance', {
+      user_id: user.sponsor_id,
+      amount: rewardAmount
+    });
+
+    if (balanceError) {
+      console.error('Error updating sponsor balance:', balanceError);
+      return;
+    }
+
+    // Update sponsor's total earnings
+    const { error: earningsError } = await supabase.rpc('update_user_earnings', {
+      user_id: user.sponsor_id,
+      referral_amount: rewardAmount
+    });
+
+    if (earningsError) {
+      console.error('Error updating sponsor earnings:', earningsError);
+    }
+
+    // Log the referral reward
+    await supabase.from('activities').insert({
+      user_id: user.sponsor_id,
+      type: 'referral_staking_reward',
+      amount: rewardAmount,
+      status: 'completed',
+      created_at: new Date().toISOString()
+    });
+
+    // Update referral status to active if not already
+    await supabase
+      .from('referrals')
+      .update({ status: 'active' })
+      .eq('sponsor_id', user.sponsor_id)
+      .eq('referred_id', userId);
+
+    console.log(`Processed referral staking reward: ${rewardAmount} TAPPS for sponsor ${user.sponsor_id} from user ${userId}'s stake of ${stakedAmount}`);
+
+  } catch (error) {
+    console.error('Error processing referral staking rewards:', error);
   }
 };
 
@@ -1176,7 +1333,10 @@ export const processDeposit = async (userId: number, amount: number, txHash: str
       return false;
     }
 
-    // 5. Log the activity
+    // 5. Process referral rewards for staking
+    await processReferralStakingRewards(userId, amount);
+
+    // 6. Log the activity
     await supabase.from('activities').insert({
       user_id: userId,
       type: 'deposit',

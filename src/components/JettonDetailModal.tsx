@@ -216,7 +216,7 @@ export const JettonDetailModal = ({
           {/* Token Info */}
           <div className="p-6 border-b border-slate-700">
             <h3 className="text-lg font-semibold text-white mb-4">Token Information</h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Contract Address</span>
                 <div className="flex items-center gap-2">
@@ -233,10 +233,22 @@ export const JettonDetailModal = ({
                   </button>
                 </div>
               </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Symbol</span>
+                <span className="text-white font-medium">{enhancedJetton.jetton.symbol || 'N/A'}</span>
+              </div>
+              
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Decimals</span>
                 <span className="text-white">{enhancedJetton.jetton.decimals}</span>
               </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Total Supply</span>
+                <span className="text-white">{enhancedJetton.jetton.totalSupply || 'Unknown'}</span>
+              </div>
+              
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Verification</span>
                 <div className="flex items-center gap-2">
@@ -250,6 +262,37 @@ export const JettonDetailModal = ({
                   )}
                 </div>
               </div>
+              
+              {enhancedJetton.jetton.website && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Website</span>
+                  <a
+                    href={enhancedJetton.jetton.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Visit
+                  </a>
+                </div>
+              )}
+              
+              {enhancedJetton.jetton.telegram && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Telegram</span>
+                  <a
+                    href={enhancedJetton.jetton.telegram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Join
+                  </a>
+                </div>
+              )}
+              
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">View on Explorer</span>
                 <button

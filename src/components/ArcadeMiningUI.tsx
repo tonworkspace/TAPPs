@@ -1,5 +1,7 @@
-import { useState } from 'react';
- interface ArcadeMiningUIProps {
+import { useState, useEffect } from 'react';
+import { supabase, ensureUserHasSponsorCode } from '../lib/supabaseClient';
+
+interface ArcadeMiningUIProps {
   balanceTon: number;
   tonPrice: number;
   currentEarningsTon: number;
@@ -14,6 +16,9 @@ import { useState } from 'react';
   totalWithdrawnTon: number;
   activities?: Array<{ id: string; type: string; amount: number; status: string; created_at: string; }>; 
   isLoadingActivities?: boolean;
+  userId?: number;
+  userUsername?: string;
+  referralCode?: string;
 }
 
 // A compact, arcade-style mining UI that preserves existing actions
@@ -27,16 +32,67 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
     cooldownText,
     onClaim,
     onOpenDeposit,
-    onOpenWithdraw,
+    // onOpenWithdraw,
     airdropBalanceNova,
     potentialEarningsTon,
     totalWithdrawnTon,
+    userId,
+    userUsername,
+    referralCode,
   } = props;
 
-  const [activeTab, setActiveTab] = useState<'mining' | 'activity'>('mining');
+  const [activeTab, setActiveTab] = useState<'mining' | 'activity' | 'referral'>('mining');
+  const [sponsorCode, setSponsorCode] = useState<string>('');
+  const [sponsorInfo, setSponsorInfo] = useState<{username: string, code: string} | null>(null);
+  const [referralStats, setReferralStats] = useState<{active: number, total: number}>({active: 0, total: 0});
 
   const isStaked = Number(balanceTon) > 0;
   const canClaim = isStaked && !isClaiming && currentEarningsTon > 0 && claimCooldown <= 0;
+
+  // Load referral data
+  useEffect(() => {
+    const loadReferralData = async () => {
+      if (!userId) return;
+
+      try {
+        // Get user's sponsor code
+        const code = await ensureUserHasSponsorCode(userId, userUsername);
+        setSponsorCode(code);
+
+        // Get sponsor information
+        const { data: user } = await supabase
+          .from('users')
+          .select('sponsor_id, sponsor:users!referrer_id(username, sponsor_code)')
+          .eq('id', userId)
+          .single();
+
+        if (user?.sponsor) {
+          const sponsorData = Array.isArray(user.sponsor) ? user.sponsor[0] : user.sponsor;
+          if (sponsorData && sponsorData.username) {
+            setSponsorInfo({
+              username: sponsorData.username,
+              code: sponsorData.sponsor_code || 'N/A'
+            });
+          }
+        }
+
+        // Get referral stats
+        const { data: referrals } = await supabase
+          .from('referrals')
+          .select('status')
+          .eq('sponsor_id', userId);
+
+        if (referrals) {
+          const active = referrals.filter(r => r.status === 'active').length;
+          setReferralStats({ active, total: referrals.length });
+        }
+      } catch (error) {
+        console.error('Error loading referral data:', error);
+      }
+    };
+
+    loadReferralData();
+  }, [userId, userUsername]);
 
   return (
     <div className="relative overflow-visible">
@@ -55,7 +111,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                 <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white ${isStaked ? 'bg-emerald-500' : 'bg-slate-400'}`} />
               </div>
               <div>
-                <div className="text-xs text-slate-500 font-semibold tracking-wide uppercase">My Stake</div>
+                <div className="text-xs text-slate-500 font-semibold tracking-wide uppercase">MINING POWER</div>
                 <div className="text-lg font-bold text-slate-900">
                   {balanceTon?.toFixed(2) || '0.00'} <span className="text-slate-600 text-base font-medium">TON</span>
                 </div>
@@ -68,7 +124,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              <span className="text-sm font-semibold">Deposit</span>
+              <span className="text-sm font-semibold">START MINING</span>
             </button>
           </div>
 
@@ -77,15 +133,21 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
             <div className="inline-flex p-1 rounded-lg bg-slate-100">
               <button
                 onClick={() => setActiveTab('mining')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'mining' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'mining' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
               >
                 Mining
               </button>
               <button
                 onClick={() => setActiveTab('activity')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'activity' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+                className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'activity' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
               >
                 Activity
+              </button>
+              <button
+                onClick={() => setActiveTab('referral')}
+                className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-200 ${activeTab === 'referral' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+              >
+                Invite
               </button>
             </div>
           </div>
@@ -148,6 +210,62 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
               ) : (
                 <div className="text-center py-8 text-slate-500">No recent activity</div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'referral' && (
+            <div className="mt-4 mb-4 space-y-4">
+              {/* Your Sponsor Code */}
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div className="text-sm font-bold text-slate-700 mb-2">🎯 My Sponsor Code</div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-white rounded-lg px-3 py-2 border border-slate-300">
+                    <span className="text-lg font-bold text-blue-600">{ referralCode || sponsorCode || 'Loading...'}</span>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(referralCode || sponsorCode);
+                        alert('Sponsor code copied!');
+                      } catch (error) {
+                        alert('Failed to copy code');
+                      }
+                    }}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Your Sponsor */}
+              {sponsorInfo && (
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <div className="text-sm font-bold text-slate-700 mb-2">👆 Your Sponsor</div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm">
+                        {sponsorInfo.username?.[0]?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-slate-900 font-medium">{sponsorInfo.username}</div>
+                      <div className="text-xs text-slate-500">Code: {sponsorInfo.code}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Referral Stats */}
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div className="text-sm font-bold text-slate-700 mb-3">📊 My Network</div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{referralStats.active}</div>
+                    <div className="text-xs text-slate-500">Active Team</div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           {/* Not staked prompt */}
@@ -240,7 +358,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                 )}
               </div>
             </button>
-            {isStaked && (
+            {/* {isStaked && (
               <button
                 onClick={onOpenWithdraw}
                 disabled={!onOpenWithdraw || totalWithdrawnTon <= 0}
@@ -257,7 +375,7 @@ export default function ArcadeMiningUI(props: ArcadeMiningUIProps) {
                   <span>Withdraw TAPPS</span>
                 </div>
               </button>
-            )}
+            )} */}
           </div>
 
           {/* Compact Footer Info */}

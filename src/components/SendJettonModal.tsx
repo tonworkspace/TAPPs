@@ -6,7 +6,8 @@ import { Address } from "@ton/core";
 import { useTonConnectUI } from "@tonconnect/ui-react";
 import { getJettonTransaction } from "../utility/jetton-transfer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, X, AlertCircle, Loader2 } from "lucide-react"; // Import icons
+import { Send, X, AlertCircle, Loader2, Shield } from "lucide-react";
+import { getJettonRegistryData, enhanceJettonData } from "../utils/jettonRegistry";
 
 interface SendJettonModalProps {
   jetton: JettonBalance;
@@ -25,6 +26,13 @@ export const SendJettonModal = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const [tonConnectUI] = useTonConnectUI();
+  
+  const registryData = getJettonRegistryData(jetton.jetton.address.toString());
+  const enhancedJetton = enhanceJettonData(jetton, registryData || undefined);
+  const jettonAmount = parseFloat(toDecimals(jetton.balance, jetton.jetton.decimals));
+  const usdValue = registryData?.verified && registryData.rateUsd > 0 
+    ? jettonAmount * registryData.rateUsd 
+    : 0;
 
   const handleSubmit = async () => {
     try {
@@ -66,15 +74,36 @@ export const SendJettonModal = ({
           <div className="p-6 border-b border-gray-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Send className="w-5 h-5 text-blue-500" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
+                  {enhancedJetton.jetton.image ? (
+                    <img
+                      src={enhancedJetton.jetton.image}
+                      alt={enhancedJetton.jetton.name}
+                      className="w-8 h-8 rounded-lg object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://via.placeholder.com/32/6366f1/ffffff?text=${enhancedJetton.jetton.symbol?.[0] || '?'}`
+                      }}
+                    />
+                  ) : (
+                    <Send className="w-5 h-5 text-blue-500" />
+                  )}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">
-                    Send {jetton.jetton.name}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-white">
+                      Send {enhancedJetton.jetton.name}
+                    </h2>
+                    {enhancedJetton.jetton.verified && (
+                      <Shield className="w-4 h-4 text-green-400" />
+                    )}
+                  </div>
                   <p className="text-sm text-gray-400">
                     Available: {formatTokenAmount(jetton.balance, jetton.jetton.decimals, { maxDecimals: 6, trimInsignificant: true, smartCompactWords: true })}
+                    {usdValue > 0 && (
+                      <span className="ml-2 text-green-400">
+                        (${usdValue.toFixed(2)})
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -127,12 +156,17 @@ export const SendJettonModal = ({
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <button
                       onClick={() => setAmount(toDecimals(jetton.balance, jetton.jetton.decimals))}
-                      className="text-sm text-blue-500 hover:text-blue-400"
+                      className="text-sm text-blue-500 hover:text-blue-400 font-medium"
                     >
                       MAX
                     </button>
                   </div>
                 </div>
+                {amount && !isNaN(parseFloat(amount)) && registryData?.verified && registryData.rateUsd > 0 && (
+                  <p className="text-sm text-green-400 mt-2">
+                    ≈ ${(parseFloat(amount) * registryData.rateUsd).toFixed(2)} USD
+                  </p>
+                )}
               </div>
             </div>
           </div>

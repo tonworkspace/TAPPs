@@ -11,7 +11,8 @@ export interface AuthUser extends User {
   has_nft?: boolean;
   referrer_username?: string;
   referrer_rank?: string;
-  referrer_id?: number;
+  sponsor_id?: number;
+  sponsor_code?: string;
   total_sbt?: number;
   claimed_milestones?: number[];
   photoUrl?: string;
@@ -147,7 +148,7 @@ export const useAuth = () => {
         .from('users')
         .select(`
           *,
-          referrer:users(
+          referrer:users!referrer_id(
             username,
             rank
           )
@@ -192,7 +193,7 @@ export const useAuth = () => {
           .insert([newUserData])
           .select(`
             *,
-            referrer:users(
+            referrer:users!referrer_id(
               username,
               rank
             )
@@ -232,7 +233,7 @@ export const useAuth = () => {
                 // Set referrer on the new user if not already set
                 const { data: updatedNewUser, error: setReferrerError } = await supabase
                   .from('users')
-                  .update({ referrer_id: referrerUser.id })
+                  .update({ sponsor_id: referrerUser.id })
                   .eq('id', newUser.id)
                   .select('*')
                   .single();
@@ -243,7 +244,7 @@ export const useAuth = () => {
                   // Create referral record (idempotent-ish: rely on uniqueness at app logic level)
                   const { error: insertReferralError } = await supabase
                     .from('referrals')
-                    .insert([{ referrer_id: referrerUser.id, referred_id: newUser.id, status: 'active' }]);
+                    .insert([{ sponsor_id: referrerUser.id, referred_id: newUser.id, status: 'active' }]);
 
                   if (insertReferralError) {
                     console.error('Failed to insert referral row:', insertReferralError);
@@ -342,30 +343,30 @@ export const useAuth = () => {
             .single();
 
           if (data) {
-            // If we need referrer info, fetch it separately if referrer_id exists
-            let referrerInfo = null;
-            if (data.referrer_id) {
-              const { data: referrerData } = await supabase
+            // If we need sponsor info, fetch it separately if sponsor_id exists
+            let sponsorInfo = null;
+            if (data.sponsor_id) {
+              const { data: sponsorData } = await supabase
                 .from('users')
                 .select('username, rank')
-                .eq('id', data.referrer_id)
+                .eq('id', data.sponsor_id)
                 .single();
               
-              if (referrerData) {
-                referrerInfo = {
-                  username: referrerData.username,
-                  rank: referrerData.rank
+              if (sponsorData) {
+                sponsorInfo = {
+                  username: sponsorData.username,
+                  rank: sponsorData.rank
                 };
               }
             }
 
             const authUser: AuthUser = {
               ...data,
-              referrer_username: referrerInfo?.username,
-              referrer_rank: referrerInfo?.rank,
+              referrer_username: sponsorInfo?.username,
+              referrer_rank: sponsorInfo?.rank,
               login_streak: data.login_streak || 0,
               last_login_date: data.last_login_date,
-              referrer: referrerInfo
+              referrer: sponsorInfo
             };
             setUser(authUser);
           }
@@ -399,19 +400,19 @@ export const useAuth = () => {
 
         if (error) throw error;
 
-        // If we need referrer info, fetch it separately
-        let referrerInfo = user.referrer;
-        if (updatedUser.referrer_id && (!referrerInfo || updatedUser.referrer_id !== user.referrer_id)) {
-          const { data: referrerData } = await supabase
+        // If we need sponsor info, fetch it separately
+        let sponsorInfo = user.referrer;
+        if (updatedUser.sponsor_id && (!sponsorInfo || updatedUser.sponsor_id !== user.sponsor_id)) {
+          const { data: sponsorData } = await supabase
             .from('users')
             .select('username, rank')
-            .eq('id', updatedUser.referrer_id)
+            .eq('id', updatedUser.sponsor_id)
             .single();
           
-          if (referrerData) {
-            referrerInfo = {
-              username: referrerData.username,
-              rank: referrerData.rank
+          if (sponsorData) {
+            sponsorInfo = {
+              username: sponsorData.username,
+              rank: sponsorData.rank
             };
           }
         }
@@ -419,9 +420,9 @@ export const useAuth = () => {
         setUser(prev => ({
           ...prev,
           ...updatedUser,
-          referrer: referrerInfo,
-          referrer_username: referrerInfo?.username,
-          referrer_rank: referrerInfo?.rank,
+          referrer: sponsorInfo,
+          referrer_username: sponsorInfo?.username,
+          referrer_rank: sponsorInfo?.rank,
           lastUpdate: new Date().toISOString()
         }));
 

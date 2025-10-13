@@ -140,7 +140,7 @@ export const useAuth = () => {
         .from('users')
         .select(`
           *,
-          referrer:users(
+          referrer:users!referrer_id(
             username,
             rank
           )
@@ -185,7 +185,7 @@ export const useAuth = () => {
           .insert([newUserData])
           .select(`
             *,
-            referrer:users(
+            referrer:users!referrer_id(
               username,
               rank
             )

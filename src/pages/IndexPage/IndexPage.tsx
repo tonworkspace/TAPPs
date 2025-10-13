@@ -1,12 +1,12 @@
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { toUserFriendlyAddress } from '@tonconnect/sdk';
 import { FC, useState, useEffect, useRef } from 'react';
-import { FaGem } from 'react-icons/fa';
+import { FaAtom, FaChargingStation, FaGem, FaTasks, FaWallet } from 'react-icons/fa';
+import { MdDiamond } from 'react-icons/md';
 // import { BiNetworkChart } from 'react-icons/bi';
-import { AiOutlineHome } from 'react-icons/ai';
 import { TonConnectButton, } from '@tonconnect/ui-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, processReferralStakingRewards } from '@/lib/supabaseClient';
 import { OnboardingScreen } from './OnboardingScreen';
 import { toNano, fromNano } from "ton";
 import TonWeb from 'tonweb';
@@ -15,8 +15,6 @@ import { Snackbar } from '@telegram-apps/telegram-ui';
 import ReferralSystem from '@/components/ReferralSystem';
 // import TokenLaunchpad from '@/components/TokenLaunchpad';
 import { WithdrawalInfoModal } from '@/components/WithdrawalInfoModal';
-import { BsCoin } from 'react-icons/bs';
-import { GiScrollUnfurled } from 'react-icons/gi';
 import SocialTasks from '@/components/SocialTasks';
 // import DailyUpdateCard from '@/components/DailyUpdateCard/DailyUpdateCard';
 import { NFTMinter } from '@/components/NFTMinter';
@@ -285,7 +283,7 @@ const OFFLINE_EARNINGS_KEY = 'offline_earnings_state';
 // const TOTAL_EARNED_KEY = 'total_earned_state';
 
 // Add these constants at the top
-const LOCK_PERIOD_DAYS = 100;
+const LOCK_PERIOD_DAYS = 135;
 const LOCK_PERIOD_MS = LOCK_PERIOD_DAYS * 24 * 60 * 60 * 1000;
 
 // Update the calculateStakingProgress function
@@ -378,9 +376,306 @@ const syncEarningsToDatabase = async (userId: number, earnings: number) => {
 export const IndexPage: FC = () => {
 
   const [currentTab, setCurrentTab] = useState('home');
+  const [userReferralCode, setUserReferralCode] = useState<string>('');
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const { user, isLoading, error, updateUserData } = useAuth();
+  
+  // Sponsor code gate states
+  const [hasSponsor, setHasSponsor] = useState<boolean | null>(null);
+  const [showSponsorGate, setShowSponsorGate] = useState(false);
+  const [applyCode, setApplyCode] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
+  
+  // Check if user has a sponsor
+  const checkSponsorStatus = async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('🔍 Checking sponsor status for user:', user.id);
+      
+      // Check if user is the first user (admin bypass)
+      const { data: firstUser } = await supabase
+        .from('users')
+        .select('id')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single();
+        
+      console.log('👑 First user ID:', firstUser?.id, 'Current user ID:', user.id);
+        
+      // If this is the first user, bypass sponsor gate
+      if (firstUser?.id === user.id) {
+        console.log('✅ First user detected - bypassing sponsor gate');
+        setHasSponsor(true);
+        setShowSponsorGate(false);
+        return;
+      }
+      
+      // Check if user already has a sponsor (from start parameters or manual entry)
+      const { data: referralData } = await supabase
+        .from('referrals')
+        .select('sponsor_id')
+        .eq('referred_id', user.id)
+        .maybeSingle();
+        
+       console.log('📊 Referral data:', referralData);
+       console.log('👤 User sponsor_id:', user.sponsor_id);
+         
+       // Check if user has sponsor from referrals table
+       const hasSponsorFromReferrals = !!referralData?.sponsor_id;
+       
+       // Check if user has sponsor_id set in users table
+       const hasSponsorFromUser = !!user.sponsor_id;
+       
+       // User has a sponsor if either referrals table OR users table has sponsor info
+       const hasSponsorStatus = hasSponsorFromReferrals || hasSponsorFromUser;
+      
+      console.log('🔍 Sponsor status check:', {
+        hasSponsorFromReferrals,
+        hasSponsorFromUser,
+        hasSponsorStatus,
+        willShowGate: !hasSponsorStatus
+      });
+      
+      setHasSponsor(hasSponsorStatus);
+      setShowSponsorGate(!hasSponsorStatus);
+      
+       // If user has sponsor_id but no referral record, create it
+       if (hasSponsorFromUser && !hasSponsorFromReferrals && user.sponsor_id) {
+         console.log('📝 Creating missing referral record for sponsor_id:', user.sponsor_id);
+         try {
+           await supabase
+             .from('referrals')
+             .insert({
+               sponsor_id: user.sponsor_id,
+               referred_id: user.id,
+               status: 'active',
+               created_at: new Date().toISOString()
+             });
+           console.log('✅ Referral record created');
+         } catch (error) {
+           console.error('❌ Error creating referral record:', error);
+         }
+       }
+    } catch (error) {
+      console.error('❌ Error checking sponsor status:', error);
+      // On error, show sponsor gate to ensure user can still enter
+      setHasSponsor(false);
+      setShowSponsorGate(true);
+    }
+  };
+
+  // Apply sponsor code function
+  const handleApplySponsorCode = async () => {
+    if (!user?.id || !applyCode.trim()) return;
+    
+    try {
+      setIsApplying(true);
+      
+      if (applyCode === String(user.telegram_id) || applyCode === String(user.id)) {
+        alert('You cannot use your own code.');
+        return;
+      }
+      
+      // Check if user already has a sponsor
+      const { data: existing } = await supabase
+        .from('referrals')
+        .select('*')
+        .eq('referred_id', user.id)
+        .maybeSingle();
+        
+      if (existing) {
+        alert('You already have a sponsor assigned.');
+        return;
+      }
+      
+      // Handle default codes for first user
+      if (applyCode.toLowerCase() === 'admin' || applyCode.toLowerCase() === 'system' || applyCode.toLowerCase() === 'default') {
+        // Check if this user is the first user in the system
+        const { data: totalUsers } = await supabase
+          .from('users')
+          .select('id', { count: 'exact', head: true });
+          
+        const { data: firstUser } = await supabase
+          .from('users')
+          .select('id, username, telegram_id, sponsor_code')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
+          
+        // If this user is the first user, bypass the sponsor gate
+        if (totalUsers?.length === 1 || firstUser?.id === user.id) {
+          // Generate admin sponsor code if not already set
+          if (!user.sponsor_code || !user.sponsor_code.startsWith('ADMIN-')) {
+            const defaultSponsorCode = `ADMIN-${user.id.toString().padStart(4, '0')}`;
+            
+            // Update the user with the default sponsor code
+            const { error: updateCodeError } = await supabase
+              .from('users')
+              .update({ sponsor_code: defaultSponsorCode })
+              .eq('id', user.id);
+              
+            if (updateCodeError) {
+              console.error('Error setting default sponsor code:', updateCodeError);
+              alert('Error setting up default sponsor code.');
+              return;
+            }
+            
+            // Update local user state
+            if (updateUserData) {
+              updateUserData({ sponsor_code: defaultSponsorCode });
+            }
+            
+            alert(`Admin sponsor code generated: ${defaultSponsorCode}`);
+          }
+          
+          // Bypass sponsor gate for first user
+          setHasSponsor(true);
+          setShowSponsorGate(false);
+          setApplyCode('');
+          setIsApplying(false);
+          return;
+        } else {
+          alert('Default codes are only available for the first user.');
+          return;
+        }
+      }
+      
+      // Handle first user's own admin sponsor code
+      if (applyCode.startsWith('ADMIN-')) {
+        // Check if this user is the first user
+        const { data: firstUser } = await supabase
+          .from('users')
+          .select('id')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
+          
+        if (firstUser?.id === user.id) {
+          // Allow first user to use their own admin code to bypass
+          setHasSponsor(true);
+          setShowSponsorGate(false);
+          setApplyCode('');
+          setIsApplying(false);
+          alert('Welcome, Admin! You have successfully bypassed the sponsor gate.');
+          return;
+        } else {
+          alert('Admin codes are only available for the first user.');
+          return;
+        }
+      }
+      
+      // Validate sponsor code
+      const codeNum = Number(applyCode);
+      if (isNaN(codeNum)) {
+        alert('Invalid sponsor code format.');
+        return;
+      }
+      
+      // Find sponsor by telegram_id or user_id
+      const { data: sponsor, error: sponsorError } = await supabase
+        .from('users')
+        .select('id, username, telegram_id, sponsor_code')
+        .or(`telegram_id.eq.${codeNum},id.eq.${codeNum}`)
+        .maybeSingle();
+        
+      if (sponsorError || !sponsor) {
+        alert('Sponsor not found. Please check the code.');
+        return;
+      }
+      
+      // Check if trying to use own code
+      if (sponsor.id === user.id) {
+        alert('You cannot use your own sponsor code.');
+        return;
+      }
+      
+      // Check if sponsor is trying to refer themselves
+      const { data: reverseCheck } = await supabase
+        .from('referrals')
+        .select('*')
+        .eq('sponsor_id', user.id)
+        .eq('referred_id', sponsor.id)
+        .maybeSingle();
+        
+      if (reverseCheck) {
+        alert('Cannot create circular referral relationship.');
+        return;
+      }
+      
+      // Create referral relationship
+      const { error: insertErr } = await supabase
+        .from('referrals')
+        .insert({ 
+          sponsor_id: sponsor.id, 
+          referred_id: user.id, 
+          status: 'active',
+          created_at: new Date().toISOString()
+        });
+        
+      if (insertErr) {
+        console.error('Insert error:', insertErr);
+        throw insertErr;
+      }
+      
+      // Update user's sponsor_id in users table
+      const { error: updateErr } = await supabase
+        .from('users')
+        .update({ sponsor_id: sponsor.id })
+        .eq('id', user.id);
+        
+      if (updateErr) {
+        console.error('Update error:', updateErr);
+        // Don't throw here, referral was created successfully
+      }
+      
+      // Update local user state
+      if (updateUserData) {
+        updateUserData({ sponsor_id: sponsor.id });
+      }
+      
+      // Update sponsor's direct_referrals count
+      const { error: bumpDirectError } = await supabase
+        .from('users')
+        .update({ direct_referrals: (sponsor as any).direct_referrals + 1 })
+        .eq('id', sponsor.id);
+        
+      if (bumpDirectError) {
+        console.warn('Failed to bump direct_referrals (non-fatal):', bumpDirectError?.message);
+      }
+      
+      alert(`Successfully joined ${sponsor.username}'s team!`);
+      setApplyCode(''); // Clear the input
+      checkSponsorStatus(); // Check sponsor status
+      setShowSponsorGate(false); // Hide the gate
+      
+    } catch (e) {
+      console.error(e);
+      alert('Failed to apply code');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  // Set user referral code when user data is available
+  useEffect(() => {
+    if (user?.id) {
+      setUserReferralCode(String(user.telegram_id || user.id));
+      checkSponsorStatus();
+      
+      // Fallback: If sponsor status check takes too long or fails, show sponsor gate
+      const fallbackTimer = setTimeout(() => {
+        if (hasSponsor === null) {
+          console.log('⚠️ Sponsor status check timeout - showing sponsor gate as fallback');
+          setHasSponsor(false);
+          setShowSponsorGate(true);
+        }
+      }, 5000); // 5 second timeout
+      
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [user?.id, user?.telegram_id, hasSponsor]);
   // const userAddress = useTonAddress();
   const [, setUserFriendlyAddress] = useState<string | null>(null);
   const [tonConnectUI] = useTonConnectUI();
@@ -412,7 +707,7 @@ export const IndexPage: FC = () => {
   }, [tonConnectUI]);
 
   const [activeCard] = useState<CardType>('stats');
-  const [currentROI, ] = useState<number>(0.01); // 1% daily default
+  const [currentROI, ] = useState<number>(0.1); // 1% daily default
   const [tonPrice, setTonPrice] = useState(0);
   const [, setTonPriceChange] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1218,6 +1513,9 @@ const handleDeposit = async (amount: number) => {
       });
 
       if (balanceError) throw balanceError;
+
+      // Process referral rewards for staking
+      await processReferralStakingRewards(user.id, amount);
 
       // Fetch updated user data
       const { data: updatedUser } = await supabase
@@ -2218,9 +2516,9 @@ const handleDeposit = async (amount: number) => {
   // Update the main return statement to handle loading, new user, and no stake states
   if (isLoading || isInitializing) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0A0A0F]">
+      <div className="flex items-center justify-center min-h-screen bg-[#FFFFFF]">
         <div className="text-center">
-          <div className="w-16 h-16 border-t-2 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-20 h-20 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-blue-400">{isInitializing ? 'Initializing your account...' : 'Loading...'}</p>
         </div>
       </div>
@@ -2238,6 +2536,87 @@ const handleDeposit = async (amount: number) => {
   // Show onboarding for new users
   if (isNewUser && user) {
     return <OnboardingScreen />;
+  }
+
+  // Show sponsor gate if user doesn't have a sponsor
+  if (showSponsorGate && (hasSponsor === false || hasSponsor === null) && user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="w-full max-w-md mx-4">
+          {/* Sponsor Code Gate */}
+          <div className="p-8 rounded-2xl bg-white border border-slate-200 shadow-lg">
+            <div className="text-center space-y-6">
+              {/* Icon */}
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              
+              {/* Title and Description */}
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 mb-3">🔐 Join a Team First</h1>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  To access TAPPs, you need to join a team by entering a sponsor code. 
+                  This helps build our community and ensures everyone has a sponsor to guide them.
+                </p>
+              </div>
+              
+              {/* Form */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input 
+                    value={applyCode}
+                    onChange={(e) => setApplyCode(e.target.value)} 
+                    placeholder="Enter sponsor code" 
+                    className="flex-1 px-4 py-3 rounded-lg border border-slate-200 text-slate-900 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" 
+                  />
+                  <button 
+                    onClick={handleApplySponsorCode}
+                    className="px-6 py-3 rounded-lg bg-blue-600 text-white text-sm font-semibold disabled:opacity-60 hover:bg-blue-700 transition-colors flex items-center gap-2" 
+                    disabled={isApplying || !applyCode.trim()}
+                  >
+                    {isApplying ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Joining...
+                      </>
+                    ) : (
+                      'Join Team'
+                    )}
+                  </button>
+                </div>
+                
+                {/* Help Text */}
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">
+                    Don't have a sponsor code? Ask a friend who's already using TAPPs!
+                  </p>
+                </div>
+                
+                {/* Benefits */}
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">✨ Benefits of Joining a Team</h3>
+                  <ul className="text-xs text-blue-700 space-y-1">
+                    <li>• Get guidance from experienced users</li>
+                    <li>• Access to team rewards and bonuses</li>
+                    <li>• Build your own referral network</li>
+                    <li>• Earn together with your team</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="text-center mt-6">
+            <p className="text-xs text-slate-500">
+            <a href="https://t.me/Tapps_chat"> Need help? Contact our support team</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -2338,6 +2717,9 @@ const handleDeposit = async (amount: number) => {
               totalWithdrawnTon={Number(user?.total_withdrawn ?? 0)}
               activities={activities}
               isLoadingActivities={isLoadingActivities}
+              userId={user?.id}
+              userUsername={user?.username}
+              referralCode={userReferralCode}
             />
 
 
@@ -2347,7 +2729,6 @@ const handleDeposit = async (amount: number) => {
 
         {currentTab === 'network' && (
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             <ReferralSystem 
             />
           </div>
@@ -2356,7 +2737,6 @@ const handleDeposit = async (amount: number) => {
         {currentTab === 'airdrop' && (
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-slate-100/30 to-purple-50/50" />
             <NewsComponent/>
           </div>
         )}
@@ -2364,7 +2744,6 @@ const handleDeposit = async (amount: number) => {
         {currentTab === 'tasks' && (
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             {/* Content */}
             <div className="relative">
               <SocialTasks showSnackbar={showSnackbar}/>
@@ -2375,7 +2754,6 @@ const handleDeposit = async (amount: number) => {
         {currentTab === 'token' && (
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-slate-100/30" />
             {/* Content */}
             <div className="relative">
               <TonWallet />
@@ -2495,166 +2873,178 @@ const handleDeposit = async (amount: number) => {
              
 
        {/* Deposit Modal */}
-{showDepositModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-gradient-to-b from-[#1a1c2e] to-[#0d0f1d] rounded-xl w-full max-w-md border-2 border-blue-500/20 shadow-xl shadow-blue-500/10">
-          <div className="p-4">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
-                <div className="w-8 h-8 relative">
-                  <div className="absolute inset-0 bg-blue-500/20 rounded-lg rotate-45 animate-pulse" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
+       {showDepositModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {user?.balance && user.balance > 0 ? 'Add new staking' : 'Deposit TON'}
+                  </h2>
                 </div>
-                <div className="pixel-corners bg-[#2a2f4c] px-3 py-1">
-                  <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-                    {user?.balance && user.balance > 0 ? 'Top Up TON' : 'Deposit TON'}
+                <button
+                  onClick={() => {
+                    setShowDepositModal(false);
+                    setDepositStatus('idle');
+                    setCustomAmount('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {depositStatus === 'pending' ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-900 font-medium">Processing Deposit...</p>
+                  <p className="text-sm text-gray-500 mt-2">Please wait while we confirm your transaction</p>
+                </div>
+              ) : (
+                <>
+                  {/* Amount Display */}
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-5xl font-bold text-gray-900">
+                        {customAmount || '0'}
+                      </span>
+                      <span className="text-2xl font-medium text-gray-500">TON</span>
+                    </div>
+                    {/* <p className="text-sm text-gray-400">≈ 0 USD = 0 BTN</p> */}
+                  </div>
+
+                  {/* Quick Select Grid */}
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    {[1, 5, 10, 50, 100, 500].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => {
+                          setCustomAmount(amount.toString());
+                          handleDeposit(amount);
+                        }}
+                        className="px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200
+                          rounded-lg transition-all duration-200 group"
+                      >
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                          {amount} TON
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Amount Input */}
+                  <div className="space-y-3 mb-6">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="Enter custom amount"
+                        min="0.1"
+                        step="0.1"
+                        value={customAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
+                            setCustomAmount(value);
+                          }
+                        }}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg
+                          text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500
+                          focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                        TON
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Minimum Staking Info */}
+                  <div className="flex justify-between items-center mb-6 text-sm">
+                    <span className="text-gray-600">Minimum staking</span>
+                    <span className="font-medium text-gray-900">1 TON</span>
+                  </div>
+
+                  {/* Rewards Section */}
+                  {customAmount && parseFloat(customAmount) >= 1 && (
+                    <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">B</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">Total Rewards</p>
+                          <p className="text-xs text-gray-500">135 days</p>
+                        </div>
+                        <div className="ml-auto text-right">
+                          {/* <p className="text-sm font-bold text-gray-900">0 BTN</p> */}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 pt-3 border-t border-gray-200">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Daily Earnings</span>
+                          <span className="text-green-600 font-medium">
+                            +{(parseFloat(customAmount) * currentROI).toFixed(6)} TAPPs/day
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">135-Day Profit</span>
+                          <span className="text-blue-600 font-medium">
+                            {(parseFloat(customAmount) + calculateTotalEarnings(parseFloat(customAmount))).toFixed(2)} TAPPS
                           </span>
                         </div>
                       </div>
-              <button 
-                onClick={() => {
-                  setShowDepositModal(false);
-                  setDepositStatus('idle');
-                  setCustomAmount('');
-                }}
-                className="text-white/60 hover:text-white"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
 
-            {depositStatus === 'pending' ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-white font-medium">Processing Deposit...</p>
-                <p className="text-sm text-white/60 mt-2">Please wait while we confirm your transaction</p>
-              </div>
-            ) : (
-              <>
-                {/* Quick Select Grid */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[1, 5, 10, 50, 100, 500].map((amount) => (
-                    <button
-                      key={amount}
-                      onClick={() => {
-                        setCustomAmount(amount.toString());
-                        handleDeposit(amount);
-                      }}
-                      className="pixel-corners relative px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 
-                        border border-blue-500/30 group transition-all duration-200"
-                    >
-                      <div className="absolute inset-0 bg-grid-blue/[0.02] bg-[length:8px_8px] opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <span className="text-sm font-medium text-blue-400">{amount} TON</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Custom Amount Input */}
-                <div className="space-y-3 mb-4">
-                  <div className="relative">
-                    <input
-                      type="number"
-                      placeholder="Enter custom amount"
-                      min="0.1"
-                      step="0.1"
-                      value={customAmount}
-                      onChange={(e) => {
-                        // Validate input to ensure it's a proper number
-                        const value = e.target.value;
-                        if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
-                          setCustomAmount(value);
-                        }
-                      }}
-                      className="w-full px-4 py-3 bg-blue-900/10 border border-blue-500/20 rounded-lg 
-                        text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 text-sm">TON</div>
-                  </div>
+                      <p className="text-xs text-gray-500 mt-3">
+                        The rewards is accrued in TAPPS tokens. The amount of rewards is approximate,
+                        subject to change due to exchange rates
+                      </p>
+                    </div>
+                  )}
 
                   {/* Deposit Button */}
                   <button
                     onClick={() => {
                       const amount = parseFloat(customAmount);
-                      if (!isNaN(amount) && amount >= 0.1) {
+                      if (!isNaN(amount) && amount >= 1) {
                         handleDeposit(amount);
                       } else {
-                        showSnackbar({ 
-                          message: 'Invalid Amount', 
-                          description: 'Please enter a valid amount (minimum 0.1 TON).' 
+                        showSnackbar({
+                          message: 'Invalid Amount',
+                          description: 'Please enter a valid amount (minimum 1 TON).'
                         });
                       }
                     }}
-                    disabled={!customAmount || parseFloat(customAmount) < 0.1}
-                    className={`w-full py-3 pixel-corners font-medium transition-all duration-200 
-                      ${!customAmount || parseFloat(customAmount) < 0.1
-                        ? 'bg-blue-500/50 text-white/50 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                    disabled={!customAmount || parseFloat(customAmount) < 1}
+                    className={`w-full py-4 rounded-xl font-semibold transition-all duration-200
+                      ${!customAmount || parseFloat(customAmount) < 1
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30'
                       }`}
                   >
                     {isDepositing ? (
                       <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                         <span>Processing...</span>
                       </div>
                     ) : (
-                      user?.balance && user.balance > 0 
-                        ? `Top Up ${customAmount ? `${parseFloat(customAmount).toFixed(2)} TON` : 'TON'}`
-                        : `Deposit ${customAmount ? `${parseFloat(customAmount).toFixed(2)} TON` : 'TON'}`
+                      'Add Staking'
                     )}
                   </button>
-                </div>
 
-                {/* Earnings Preview */}
-                {customAmount && parseFloat(customAmount) >= 1 && (
-                  <div className="bg-blue-900/10 rounded-lg p-3 border border-blue-500/20 space-y-3">
-                    {/* Basic Stake Info */}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">Deposit Amount</span>
-                      <span className="text-white font-medium">{parseFloat(customAmount).toFixed(2)} TON</span>
-                    </div>
-
-                    {/* Daily Earnings */}
-                    <div className="pt-2 border-t border-blue-500/20">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-white/60">Daily Earnings</span>
-                        <span className="text-green-400 font-medium">
-                          +{(parseFloat(customAmount) * currentROI).toFixed(6)} TON/day
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Potential Return */}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">100-Day Return</span>
-                      <div className="text-right">
-                        <span className="text-blue-400 font-medium">
-                          {(parseFloat(customAmount) + calculateTotalEarnings(parseFloat(customAmount))).toFixed(2)} TON
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Info Footer */}
-                <div className="mt-4 flex items-center gap-2 text-xs text-white/40">
-                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Minimum deposit: 1 TON • Lock period: 100 days</span>
-                </div>
-              </>
-            )}
+                  {/* Info Footer */}
+                  <p className="mt-4 text-center text-xs text-gray-500">
+                    The deposit will be credited automatically, once the transaction is confirmed
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
 
       {/* Withdrawal Info Modal */}
@@ -2694,32 +3084,34 @@ const handleDeposit = async (amount: number) => {
       {/* Offline Rewards Modal */}
       {showOfflineRewardsModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 px-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-          <div className="relative bg-[#1A1B1E] rounded-xl border border-white/10 p-6 max-w-md w-full">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="relative bg-white rounded-2xl border border-gray-100 p-6 max-w-md w-full shadow-2xl">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white">Offline Rewards Available!</h3>
-              <p className="text-white/60">
+              <h3 className="text-xl font-bold text-gray-900">Claim TAPPS Reward!</h3>
+              <p className="text-gray-600">
                 You've earned rewards while you were away:
               </p>
-              <div className="text-2xl font-bold text-blue-400">
-                {offlineRewardsAmount.toFixed(8)} TON
+              <div className="text-3xl font-bold text-green-600">
+                {offlineRewardsAmount.toFixed(8)} TAPPS
               </div>
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowOfflineRewardsModal(false)}
-                  className="flex-1 px-4 py-2 rounded-xl bg-white/5 text-white/60 hover:bg-white/10"
+                  className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200
+                    font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleClaimOfflineRewards}
-                  className="flex-1 px-4 py-2 rounded-xl bg-blue-500 text-white hover:bg-blue-600"
+                  className="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700
+                    font-medium transition-colors shadow-lg shadow-blue-600/30"
                 >
                   Claim Rewards
                 </button>
@@ -2729,58 +3121,131 @@ const handleDeposit = async (amount: number) => {
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg safe-area-pb">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent pointer-events-none"></div>
+      {/* Advanced Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 shadow-2xl safe-area-pb">
+        {/* Animated gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50/80 via-white/20 to-transparent pointer-events-none"></div>
+        
+        {/* Premium user indicator */}
+        {user?.is_premium && (
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full shadow-lg">
+              <MdDiamond className="w-3 h-3 text-white animate-pulse" />
+              <span className="text-[10px] font-bold text-white">PREMIUM</span>
+            </div>
+          </div>
+        )}
         
         <div className="max-w-lg mx-auto px-4 relative">
-          <div className="grid grid-cols-4 items-center py-2">
+          <div className="grid grid-cols-5 items-center py-3">
             {[
-              { id: 'home', text: 'Main', Icon: AiOutlineHome },
-              { id: 'tasks', text: 'Tasks', Icon: GiScrollUnfurled },
-              { id: 'airdrop', text: 'Airdrop', Icon: FaGem },
-              // { id: 'network', text: 'Network', Icon: FaUserPlus },
-              { id: 'token', text: 'Token', Icon: BsCoin },
-            ].map(({ id, text, Icon }) => (
+              { 
+                id: 'home', 
+                text: 'Earn', 
+                Icon: FaAtom,
+                premium: false,
+                gradient: 'from-blue-500 to-cyan-500'
+              },
+              { 
+                id: 'tasks', 
+                text: 'Bonus', 
+                Icon: FaTasks,
+                premium: false,
+                gradient: 'from-green-500 to-emerald-500'
+              },
+              { 
+                id: 'network', 
+                text: 'Network', 
+                Icon: FaChargingStation,
+                premium: false,
+                gradient: 'from-indigo-500 to-purple-500'
+              },
+              { 
+                id: 'airdrop', 
+                text: 'Airdrop', 
+                Icon: FaGem,
+                premium: true,
+                gradient: 'from-purple-500 to-pink-500'
+              },
+              { 
+                id: 'token', 
+                text: 'Wallet', 
+                Icon: FaWallet,
+                premium: false,
+                gradient: 'from-orange-500 to-red-500'
+              },
+            ].map(({ id, text, Icon, premium, gradient }) => (
               <button 
                 key={id} 
                 onClick={() => setCurrentTab(id)}
-                className={`group flex flex-col items-center py-3 w-full transition-all duration-200 relative ${
+                className={`group flex flex-col items-center py-3 w-full transition-all duration-300 relative ${
                   currentTab === id 
                     ? 'text-blue-600' 
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                {/* Active tab background */}
+                {/* Advanced active tab background with gradient */}
                 {currentTab === id && (
-                  <div className="absolute inset-0 bg-blue-50/50 rounded-xl mx-2"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-cyan-50/60 rounded-2xl mx-1 shadow-lg border border-blue-100/50"></div>
                 )}
                 
-                <div className={`relative transition-all duration-200 ${
+                <div className={`relative transition-all duration-300 ${
                   currentTab === id ? 'scale-110' : 'group-hover:scale-105'
                 }`}>
-                  <Icon 
-                    size={currentTab === id ? 22 : 20} 
-                    className={`transition-all duration-200 ${
-                      currentTab === id ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
-                    }`} 
-                  />
-                  {/* Active indicator dot */}
+                  {/* Premium badge for certain tabs */}
+                  {premium && user?.is_premium && (
+                    <div className="absolute -top-2 -right-2 z-10">
+                      <div className="w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-md">
+                        <MdDiamond className="w-2 h-2 text-white" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className={`relative p-2 rounded-xl transition-all duration-300 ${
+                    currentTab === id 
+                      ? `bg-gradient-to-br ${gradient} shadow-lg` 
+                      : 'group-hover:bg-slate-100/50'
+                  }`}>
+                    <Icon 
+                      size={currentTab === id ? 22 : 20} 
+                      className={`transition-all duration-300 ${
+                        currentTab === id 
+                          ? 'text-white drop-shadow-sm' 
+                          : 'text-slate-500 group-hover:text-slate-700'
+                      }`} 
+                    />
+                    
+                    {/* Animated glow effect for active tab */}
+                    {currentTab === id && (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} rounded-xl opacity-20 animate-pulse`}></div>
+                    )}
+                  </div>
+                  
+                  {/* Advanced active indicator */}
                   {currentTab === id && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-blue-600 rounded-full shadow-sm"></div>
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full shadow-lg animate-bounce"></div>
+                    </div>
                   )}
                 </div>
                 
-                <span className={`text-[10px] font-semibold tracking-wide truncate max-w-[70px] text-center mt-1 transition-all duration-200 relative z-10 ${
+                <span className={`text-[10px] font-bold tracking-wide truncate max-w-[70px] text-center mt-1 transition-all duration-300 relative z-10 ${
                   currentTab === id ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-700'
                 }`}>
                   {text}
                 </span>
+                
+                {/* Premium text glow for premium users */}
+                {premium && user?.is_premium && currentTab === id && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-yellow-400/20 to-transparent rounded-2xl pointer-events-none"></div>
+                )}
               </button>
             ))}
           </div>
         </div>
+        
+        {/* Subtle bottom glow effect */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
       </div>
 
         {/* Add Snackbar component before closing div */}

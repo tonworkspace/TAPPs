@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabaseClient';
+// import { supabase } from '@/lib/supabaseClient';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -9,73 +9,73 @@ interface WithdrawModalProps {
   onSuccess?: () => void;
 }
 
-export const WithdrawModal: FC<WithdrawModalProps> = ({ isOpen, onClose, totalWithdrawnTon, onSuccess }) => {
+export const WithdrawModal: FC<WithdrawModalProps> = ({ isOpen, onClose, totalWithdrawnTon }) => {
   const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [withdrawalAddress, setWithdrawalAddress] = useState(user?.wallet_address || '');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  // const [isLoading, setIsLoading] = useState(false);
+  const [error,] = useState('');
 
-  const handleWithdraw = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
+  // const handleWithdraw = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     setError('');
 
-      const withdrawAmount = parseFloat(amount);
-      if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
-        throw new Error('Invalid withdrawal amount');
-      }
+  //     const withdrawAmount = parseFloat(amount);
+  //     if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+  //       throw new Error('Invalid withdrawal amount');
+  //     }
 
-      if (withdrawAmount < 1) {
-        throw new Error('Minimum withdrawal amount is 1 TON');
-      }
+  //     if (withdrawAmount < 1) {
+  //       throw new Error('Minimum withdrawal amount is 1 TON');
+  //     }
 
-      if (withdrawAmount > totalWithdrawnTon) {
-        throw new Error('Insufficient balance');
-      }
+  //     if (withdrawAmount > totalWithdrawnTon) {
+  //       throw new Error('Insufficient balance');
+  //     }
 
-      if (!withdrawalAddress || withdrawalAddress.trim().length === 0) {
-        throw new Error('Please enter a valid withdrawal address');
-      }
+  //     if (!withdrawalAddress || withdrawalAddress.trim().length === 0) {
+  //       throw new Error('Please enter a valid withdrawal address');
+  //     }
 
-      // Basic TON address validation (should start with UQ, EQ, or 0:)
-      const tonAddressRegex = /^(UQ|EQ|0:)[A-Za-z0-9_-]{47}$/;
-      if (!tonAddressRegex.test(withdrawalAddress.trim())) {
-        throw new Error('Please enter a valid TON wallet address');
-      }
+  //     // Basic TON address validation (should start with UQ, EQ, or 0:)
+  //     const tonAddressRegex = /^(UQ|EQ|0:)[A-Za-z0-9_-]{47}$/;
+  //     if (!tonAddressRegex.test(withdrawalAddress.trim())) {
+  //       throw new Error('Please enter a valid TON wallet address');
+  //     }
 
-      // Create withdrawal request
-      const { error: withdrawError } = await supabase
-        .from('withdrawals')
-        .insert({
-          user_id: user?.id,
-          amount: withdrawAmount,
-          wallet_amount: withdrawAmount, // This maps to the actual schema
-          status: 'PENDING',
-          created_at: new Date().toISOString()
-        });
+  //     // Create withdrawal request
+  //     const { error: withdrawError } = await supabase
+  //       .from('withdrawals')
+  //       .insert({
+  //         user_id: user?.id,
+  //         amount: withdrawAmount,
+  //         wallet_amount: withdrawAmount, // This maps to the actual schema
+  //         status: 'PENDING',
+  //         created_at: new Date().toISOString()
+  //       });
 
-      if (withdrawError) throw withdrawError;
+  //     if (withdrawError) throw withdrawError;
 
-      // For now, we'll just create the withdrawal request
-      // The actual balance deduction should be handled by the admin panel
-      // or a separate process that processes pending withdrawals
+  //     // For now, we'll just create the withdrawal request
+  //     // The actual balance deduction should be handled by the admin panel
+  //     // or a separate process that processes pending withdrawals
       
-      // Reset form
-      setAmount('');
-      setWithdrawalAddress(user?.wallet_address || '');
+  //     // Reset form
+  //     setAmount('');
+  //     setWithdrawalAddress(user?.wallet_address || '');
       
-      // Show success and close modal
-      if (onSuccess) {
-        onSuccess();
-      }
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to process withdrawal');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     // Show success and close modal
+  //     if (onSuccess) {
+  //       onSuccess();
+  //     }
+  //     onClose();
+  //   } catch (err: any) {
+  //     setError(err.message || 'Failed to process withdrawal');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   if (!isOpen) return null;
 
@@ -101,8 +101,8 @@ export const WithdrawModal: FC<WithdrawModalProps> = ({ isOpen, onClose, totalWi
           {/* Balance Display */}
           <div className="bg-black/40 rounded-xl p-4 border border-indigo-500/20">
             <div className="text-sm text-white/60 mb-1">Available Balance</div>
-            <div className="text-2xl font-bold text-white">{totalWithdrawnTon.toFixed(6)} TON</div>
-            <div className="text-xs text-white/40 mt-1">Minimum withdrawal: 1 TON</div>
+            <div className="text-2xl font-bold text-white">{totalWithdrawnTon.toFixed(6)} TAPPS</div>
+            <div className="text-xs text-white/40 mt-1">Minimum withdrawal: 1 TON ~ 1.5 TAPPS</div>
           </div>
 
           {/* Amount Input */}
@@ -170,7 +170,7 @@ export const WithdrawModal: FC<WithdrawModalProps> = ({ isOpen, onClose, totalWi
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
+          {/* <div className="flex gap-3 pt-2">
             <button
               onClick={onClose}
               className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10"
@@ -191,7 +191,7 @@ export const WithdrawModal: FC<WithdrawModalProps> = ({ isOpen, onClose, totalWi
                 'Submit Withdrawal'
               )}
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

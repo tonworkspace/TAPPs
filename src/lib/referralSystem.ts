@@ -32,7 +32,7 @@ export const referralSystem = {
       const relationships = [
         {
           user_id: userId,
-          referrer_id: referrerId,
+          sponsor_id: referrerId,
           level: 1
         }
       ];
@@ -43,7 +43,7 @@ export const referralSystem = {
           if (index + 2 <= REFERRAL_CONFIG.MAX_LEVEL) {
             relationships.push({
               user_id: userId,
-              referrer_id: ref.referrer_id,
+              sponsor_id: ref.sponsor_id,
               level: index + 2
             });
           }
@@ -66,7 +66,7 @@ export const referralSystem = {
     try {
       const { data: referrers } = await supabase
         .from('referral_chain')
-        .select('referrer_id, level')
+        .select('sponsor_id, level')
         .eq('user_id', userId)
         .lte('level', REFERRAL_CONFIG.MAX_LEVEL);
 
@@ -89,14 +89,14 @@ export const referralSystem = {
       // Get entire upline (no level limit for team volume)
       const { data: upline } = await supabase
         .from('referral_chain')
-        .select('referrer_id')
+        .select('sponsor_id')
         .eq('user_id', userId);
 
       if (!upline) return;
 
       // Update team volume for all upline members
       const updates = upline.map(ref => 
-        supabase.rpc('increment_team_volume', { user_id: ref.referrer_id, increment_by: amount })
+        supabase.rpc('increment_team_volume', { user_id: ref.sponsor_id, increment_by: amount })
       );
 
       await Promise.all(updates);
