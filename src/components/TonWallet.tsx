@@ -411,7 +411,7 @@ const TonWallet = () => {
                 return (
                   <button
                     key={jetton.jetton.address.toString()}
-                    onClick={() => handleJettonClick(jetton)}
+                    // onClick={() => handleJettonClick(jetton)}
                     className="w-full flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700 hover:border-slate-600 hover:shadow-lg transition-all duration-200 text-left group"
                   >
                     <div className="flex items-center gap-3">
