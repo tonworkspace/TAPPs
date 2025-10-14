@@ -159,7 +159,7 @@ export const useAuth = () => {
       // Handle user creation if needed - only if user truly doesn't exist
       if (!existingUser && (!fetchError || fetchError.code === 'PGRST116')) { // User doesn't exist
         // Double-check if user actually exists to prevent duplicates
-        const { data: doubleCheckUser, error: doubleCheckError } = await supabase
+        const { data: doubleCheckUser, } = await supabase
           .from('users')
           .select('id, telegram_id')
           .eq('telegram_id', telegramId)

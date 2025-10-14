@@ -180,7 +180,7 @@ const ReferralSystem = () => {
     if (user?.id) {
       console.log("User ID detected:", user.id);
       console.log("User object:", user);
-      setReferralLink(`https://t.me/tapptokenbot?startapp=${user.telegram_id}`);
+      setReferralLink(`https://t.me/tappstokenbot?startapp=${user.telegram_id}`);
       setReferralCode(String(user.telegram_id || user.id));
     } else {
       console.log("No user ID available in first useEffect");

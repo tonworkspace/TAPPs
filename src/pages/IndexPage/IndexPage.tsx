@@ -198,10 +198,10 @@ interface Activity {
 // };
 
 // Add these constants for both networks
-const MAINNET_DEPOSIT_ADDRESS = 'UQA87z9UyLuHlZigPZlBDQgYmEENvktnkYkEvP0CJaVf8E3u';
-const TESTNET_DEPOSIT_ADDRESS = 'UQA87z9UyLuHlZigPZlBDQgYmEENvktnkYkEvP0CJaVf8E3u';
+const MAINNET_DEPOSIT_ADDRESS = 'UQC3NglZSzm_8mrdGixS7OcIC-R53etS4XAuKrk_qq6PjeCi';
+const TESTNET_DEPOSIT_ADDRESS = 'UQC3NglZSzm_8mrdGixS7OcIC-R53etS4XAuKrk_qq6PjeCi';
 
-const isMainnet = false; // You can toggle this for testing
+const isMainnet = true; // You can toggle this for testing
 
 // Use the appropriate address based on network
 const DEPOSIT_ADDRESS = isMainnet ? MAINNET_DEPOSIT_ADDRESS : TESTNET_DEPOSIT_ADDRESS;
@@ -214,8 +214,6 @@ const TESTNET_API_KEY = 'd682d9b65115976e52f63713d6dd59567e47eaaa1dc6067fe8a89d5
 const tonweb = isMainnet ?
     new TonWeb(new TonWeb.HttpProvider('https://toncenter.com/api/v2/jsonRPC', {apiKey: MAINNET_API_KEY})) :
     new TonWeb(new TonWeb.HttpProvider('https://testnet.toncenter.com/api/v2/jsonRPC', {apiKey: TESTNET_API_KEY}));
-
-
 
 // Add this near the top with other constants
 // const NETWORK_NAME = isMainnet ? 'Mainnet' : 'Testnet';

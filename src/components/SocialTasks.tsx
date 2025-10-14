@@ -110,9 +110,9 @@ const SocialTasks = ({ showSnackbar, userId, onRewardClaimed }: Props) => {
     {
       id: 3,
       platform: 'Twitter',
-      action: 'Follow TAPPS on X/Twitter',
+      action: 'Follow TAPPS Whale on X/Twitter',
       reward: 15000,
-      link: 'https://x.com/TAPPsWhale',
+      link: 'https://x.com/TAPPs_Whale',
       isCompleted: false,
       description: 'Follow us on X for the latest news, updates, and community discussions!',
       rewardClaimed: false
