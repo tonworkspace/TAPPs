@@ -16,6 +16,7 @@ import ReferralSystem from '@/components/ReferralSystem';
 // import TokenLaunchpad from '@/components/TokenLaunchpad';
 import { WithdrawalInfoModal } from '@/components/WithdrawalInfoModal';
 import SocialTasks from '@/components/SocialTasks';
+import DailyRewardCard from '@/components/DailyRewardCard';
 // import DailyUpdateCard from '@/components/DailyUpdateCard/DailyUpdateCard';
 import { NFTMinter } from '@/components/NFTMinter';
 // import AdminWithdrawalPanel from '@/components/AdminWithdrawalPanel';
@@ -2744,6 +2745,17 @@ const handleDeposit = async (amount: number) => {
             {/* Clean background */}
             {/* Content */}
             <div className="relative">
+              <DailyRewardCard
+                userId={user?.id}
+                onRewardClaimed={(amount) => {
+                  showSnackbar({
+                    message: 'Reward Claimed!',
+                    description: `You have received ${amount} TAPPS.`,
+                  });
+                  // You can add a refresh function here if needed
+                }}
+              />
+              <div className="my-4" />
               <SocialTasks 
                 showSnackbar={showSnackbar}
                 userId={user?.id}

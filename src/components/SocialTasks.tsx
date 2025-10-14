@@ -127,6 +127,16 @@ const SocialTasks = ({ showSnackbar, userId, onRewardClaimed }: Props) => {
       description: 'Show your support by liking our Facebook page and joining our community!',
       rewardClaimed: false
     },
+    {
+      id: 5,
+      platform: 'Twitter',
+      action: 'Engage on a Tweet',
+      reward: 1000,
+      link: 'https://x.com/TAPPs_WHALE/status/1977881526143418805',
+      isCompleted: false,
+      description: 'Engage on this tweet to earn 1000 TAPPs per engagement.',
+      rewardClaimed: false
+    }
     // {
     //   id: 5,
     //   platform: 'Discord',
