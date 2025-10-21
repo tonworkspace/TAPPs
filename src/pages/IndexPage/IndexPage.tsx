@@ -1,6 +1,6 @@
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { toUserFriendlyAddress } from '@tonconnect/sdk';
-import { FC, useState, useEffect, useRef } from 'react';
+import { FC, useState, useEffect, useRef, useMemo } from 'react';
 import { FaAtom, FaGem, FaNetworkWired, FaTasks, FaWallet } from 'react-icons/fa';
 import { MdDiamond } from 'react-icons/md';
 // import { BiNetworkChart } from 'react-icons/bi';
@@ -16,6 +16,8 @@ import ReferralSystem from '@/components/ReferralSystem';
 // import TokenLaunchpad from '@/components/TokenLaunchpad';
 import { WithdrawalInfoModal } from '@/components/WithdrawalInfoModal';
 import SocialTasks from '@/components/SocialTasks';
+// import DailyRewardCard from '@/components/DailyRewardCard';
+import TwitterEngagementTask from '@/components/TwitterEngagementTask';
 // import DailyUpdateCard from '@/components/DailyUpdateCard/DailyUpdateCard';
 import { NFTMinter } from '@/components/NFTMinter';
 // import AdminWithdrawalPanel from '@/components/AdminWithdrawalPanel';
@@ -23,6 +25,21 @@ import ArcadeMiningUI from '@/components/ArcadeMiningUI';
 import WithdrawModal from '@/components/WithdrawModal';
 import NewsComponent from '@/components/NewsComponent';
 import TonWallet from '@/components/TonWallet';
+import DailyRewardCard from '@/components/DailyRewardCard';
+import NonStakedEngagement from '@/components/NonStakedEngagement';
+
+// Time-based multipliers as per whitepaper
+const getTimeMultiplier = (daysStaked: number): number => {
+  if (daysStaked <= 7) return 1.0;   // 1-7 days: 1.0x base rate
+  if (daysStaked <= 30) return 1.1;  // 8-30 days: 1.1x bonus multiplier
+  return 1.25; // 31+ days: 1.25x maximum multiplier
+};
+
+// Referral boost system as per whitepaper
+const getReferralBoost = (referralCount: number): number => {
+  const baseBoost = Math.min(referralCount * 0.05, 0.5); // 5% per referral, max 50%
+  return 1 + baseBoost;
+};
 
 // Add this at the top of your file with other constants
 
@@ -472,7 +489,10 @@ export const IndexPage: FC = () => {
       setIsApplying(true);
       
       if (applyCode === String(user.telegram_id) || applyCode === String(user.id)) {
-        alert('You cannot use your own code.');
+        showSnackbar({
+          message: 'Invalid Code',
+          description: 'You cannot use your own sponsor code.'
+        });
         return;
       }
       
@@ -484,7 +504,10 @@ export const IndexPage: FC = () => {
         .maybeSingle();
         
       if (existing) {
-        alert('You already have a sponsor assigned.');
+        showSnackbar({
+          message: 'Sponsor Already Assigned',
+          description: 'You already have a sponsor assigned to your account.'
+        });
         return;
       }
       
@@ -516,7 +539,10 @@ export const IndexPage: FC = () => {
               
             if (updateCodeError) {
               console.error('Error setting default sponsor code:', updateCodeError);
-              alert('Error setting up default sponsor code.');
+              showSnackbar({
+                message: 'Setup Error',
+                description: 'Error setting up default sponsor code. Please try again.'
+              });
               return;
             }
             
@@ -525,7 +551,10 @@ export const IndexPage: FC = () => {
               updateUserData({ sponsor_code: defaultSponsorCode });
             }
             
-            alert(`Admin sponsor code generated: ${defaultSponsorCode}`);
+            showSnackbar({
+              message: 'Admin Setup Complete',
+              description: `Admin sponsor code generated: ${defaultSponsorCode}`
+            });
           }
           
           // Bypass sponsor gate for first user
@@ -535,7 +564,10 @@ export const IndexPage: FC = () => {
           setIsApplying(false);
           return;
         } else {
-          alert('Default codes are only available for the first user.');
+          showSnackbar({
+            message: 'Access Denied',
+            description: 'Default codes are only available for the first user.'
+          });
           return;
         }
       }
@@ -556,10 +588,16 @@ export const IndexPage: FC = () => {
           setShowSponsorGate(false);
           setApplyCode('');
           setIsApplying(false);
-          alert('Welcome, Admin! You have successfully bypassed the sponsor gate.');
+          showSnackbar({
+            message: 'Welcome, Admin!',
+            description: 'You have successfully bypassed the sponsor gate.'
+          });
           return;
         } else {
-          alert('Admin codes are only available for the first user.');
+          showSnackbar({
+            message: 'Access Denied',
+            description: 'Admin codes are only available for the first user.'
+          });
           return;
         }
       }
@@ -567,7 +605,10 @@ export const IndexPage: FC = () => {
       // Validate sponsor code
       const codeNum = Number(applyCode);
       if (isNaN(codeNum)) {
-        alert('Invalid sponsor code format.');
+        showSnackbar({
+          message: 'Invalid Code Format',
+          description: 'Please enter a valid numeric sponsor code.'
+        });
         return;
       }
       
@@ -579,13 +620,19 @@ export const IndexPage: FC = () => {
         .maybeSingle();
         
       if (sponsorError || !sponsor) {
-        alert('Sponsor not found. Please check the code.');
+        showSnackbar({
+          message: 'Sponsor Not Found',
+          description: 'Please check the sponsor code and try again.'
+        });
         return;
       }
       
       // Check if trying to use own code
       if (sponsor.id === user.id) {
-        alert('You cannot use your own sponsor code.');
+        showSnackbar({
+          message: 'Invalid Code',
+          description: 'You cannot use your own sponsor code.'
+        });
         return;
       }
       
@@ -598,7 +645,10 @@ export const IndexPage: FC = () => {
         .maybeSingle();
         
       if (reverseCheck) {
-        alert('Cannot create circular referral relationship.');
+        showSnackbar({
+          message: 'Circular Reference',
+          description: 'Cannot create circular referral relationship.'
+        });
         return;
       }
       
@@ -643,14 +693,20 @@ export const IndexPage: FC = () => {
         console.warn('Failed to bump direct_referrals (non-fatal):', bumpDirectError?.message);
       }
       
-      alert(`Successfully joined ${sponsor.username}'s team!`);
+      showSnackbar({
+        message: 'Successfully Joined Team!',
+        description: `You have joined ${sponsor.username}'s team!`
+      });
       setApplyCode(''); // Clear the input
       checkSponsorStatus(); // Check sponsor status
       setShowSponsorGate(false); // Hide the gate
       
     } catch (e) {
       console.error(e);
-      alert('Failed to apply code');
+      showSnackbar({
+        message: 'Failed to Apply Code',
+        description: 'There was an error processing your sponsor code. Please try again.'
+      });
     } finally {
       setIsApplying(false);
     }
@@ -705,7 +761,7 @@ export const IndexPage: FC = () => {
   }, [tonConnectUI]);
 
   const [activeCard] = useState<CardType>('stats');
-  const [currentROI, ] = useState<number>(0.1); // 1% daily default
+  const [currentROI, ] = useState<number>(0.0306); // 3.06% daily to match modal calculation
   const [tonPrice, setTonPrice] = useState(0);
   const [, setTonPriceChange] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -713,6 +769,8 @@ export const IndexPage: FC = () => {
   // Add state for activities
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+  const [withdrawals, setWithdrawals] = useState<Array<{ id: number; amount: number; status: string; created_at: string; }>>([]);
+  const [isLoadingWithdrawals, setIsLoadingWithdrawals] = useState(false);
 
   const [depositStatus, setDepositStatus] = useState('idle');
 
@@ -736,6 +794,11 @@ export const IndexPage: FC = () => {
     baseEarningRate: 0,
     isActive: false,
   });
+
+  // Estimated daily earnings based on current per-second rate
+  const estimatedDailyTapps = useMemo(() => {
+    return Math.max(0, earningState.baseEarningRate * 86400);
+  }, [earningState.baseEarningRate]);
 
   // Add these state variables to your component
 const [showNFTMinterModal, setShowNFTMinterModal] = useState(false);
@@ -1330,6 +1393,27 @@ useEffect(() => {
     }, duration);
   };
 
+  // Refresh user after reward claims (updates ArcadeMiningUI props immediately)
+  const handleRewardClaimed = async (amount: number) => {
+    try {
+      if (!user?.id) return;
+      const { data: updatedUser } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      if (updatedUser) {
+        updateUserData(updatedUser);
+        showSnackbar({
+          message: 'Balance Updated',
+          description: `+${amount.toLocaleString()} TAPPS added to your airdrop balance.`
+        });
+      }
+    } catch (err) {
+      console.error('Failed to refresh user after claim:', err);
+    }
+  };
+
   // Add this effect to fetch and update the wallet balance
   useEffect(() => {
     const fetchWalletBalance = async () => {
@@ -1358,20 +1442,72 @@ useEffect(() => {
     return () => clearInterval(intervalId);
   }, [tonConnectUI]);
 
-// Add this function to calculate earnings rate based on user's balance and ROI
-const calculateEarningRate = (balance: number, baseROI: number) => {
-  // Enhanced ROI based on stake amount
-  let adjustedROI = baseROI;
-  if (balance >= 100) {
-    adjustedROI *= 1.5; // 50% bonus for 100+ TON
-  } else if (balance >= 50) {
-    adjustedROI *= 1.25; // 25% bonus for 50-99 TON
-  } else if (balance >= 10) {
-    adjustedROI *= 1.1; // 10% bonus for 10-49 TON
+// Network power calculation (total staked amount)
+const calculateNetworkPower = async (): Promise<number> => {
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('balance')
+      .gt('balance', 0);
+    
+    return data?.reduce((total, user) => total + (user.balance || 0), 0) || 1;
+  } catch (error) {
+    console.error('Error calculating network power:', error);
+    return 1; // Fallback to prevent division by zero
   }
+};
+
+// Sustainable earning rate calculation matching whitepaper formula
+const calculateEarningRate = async (
+  balance: number, 
+  _baseROI: number, 
+  daysStaked: number = 0, 
+  referralCount: number = 0
+): Promise<number> => {
+  // Get multipliers
+  const timeMultiplier = getTimeMultiplier(daysStaked);
+  const referralBoost = getReferralBoost(referralCount);
   
-  // Convert daily ROI to per-second rate
-  return (balance * adjustedROI) / 86400;
+  // Calculate effective staking power
+  const effectiveStakingPower = balance * timeMultiplier * referralBoost;
+  
+  // Get network power
+  const networkPower = await calculateNetworkPower();
+  
+  // Daily emission cap (sustainable amount)
+  const dailyEmission = 1000; // 1000 TAPPS per day total
+  
+  // Calculate daily reward using whitepaper formula
+  const dailyReward = (effectiveStakingPower / networkPower) * dailyEmission;
+  
+  // Convert to per-second rate
+  return dailyReward / 86400;
+};
+
+// Legacy function for backward compatibility (simplified)
+const calculateEarningRateLegacy = (balance: number, baseROI: number, daysStaked: number = 0) => {
+  // Use time-based multipliers to match modal calculation
+  const timeMultiplier = getTimeMultiplier(daysStaked);
+  const referralBoost = 1.0; // Default for users without referrals (can be enhanced later)
+  
+  const effectiveStakingPower = balance * timeMultiplier * referralBoost;
+  const dailyReward = effectiveStakingPower * baseROI;
+  
+  return dailyReward / 86400; // Per second rate
+};
+
+// Clear old cached earning rates to prevent $43 rewards
+const clearOldEarningCache = (userId: number) => {
+  try {
+    // Clear localStorage cache
+    localStorage.removeItem(getUserEarningsKey(userId));
+    localStorage.removeItem(getUserSyncKey(userId));
+    localStorage.removeItem(OFFLINE_EARNINGS_KEY);
+    
+    console.log('Cleared old earning cache for user:', userId);
+  } catch (error) {
+    console.error('Error clearing earning cache:', error);
+  }
 };
 
 // Update handleDeposit to use proper number handling
@@ -1512,6 +1648,9 @@ const handleDeposit = async (amount: number) => {
 
       if (balanceError) throw balanceError;
 
+      // Clear old earning cache to prevent inflated rewards
+      clearOldEarningCache(user.id);
+
       // Process referral rewards for staking
       await processReferralStakingRewards(user.id, amount);
 
@@ -1526,8 +1665,8 @@ const handleDeposit = async (amount: number) => {
         // Update user data in context
         updateUserData(updatedUser);
 
-        // Calculate new base rate with updated balance
-        const newBaseEarningRate = calculateEarningRate(updatedUser.balance, currentROI);
+        // Calculate new base rate with updated balance (new users start at day 0)
+        const newBaseEarningRate = calculateEarningRateLegacy(updatedUser.balance, currentROI, 0);
         
         // Set new state with preserved earnings for top-ups
         const newState = {
@@ -1650,12 +1789,34 @@ const handleDeposit = async (amount: number) => {
       }
     };
 
+    const fetchWithdrawals = async () => {
+      if (!user?.id) return;
+
+      setIsLoadingWithdrawals(true);
+      try {
+        const { data, error } = await supabase
+          .from('withdrawals')
+          .select('id, amount, status, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        setWithdrawals(data || []);
+      } catch (error) {
+        console.error('Error fetching withdrawals:', error);
+      } finally {
+        setIsLoadingWithdrawals(false);
+      }
+    };
+
     // Fetch when activity card is active or when on home (embedded activity list)
     if (activeCard === 'activity' || currentTab === 'home') {
       fetchActivities();
+      fetchWithdrawals();
 
-      // Set up real-time subscription
-      const subscription = supabase
+      // Set up real-time subscription for activities
+      const activitiesSubscription = supabase
         .channel('activities-channel')
         .on(
           'postgres_changes',
@@ -1684,9 +1845,40 @@ const handleDeposit = async (amount: number) => {
         )
         .subscribe();
 
-        // Cleanup subscription
+      // Set up real-time subscription for withdrawals
+      const withdrawalsSubscription = supabase
+        .channel('withdrawals-channel')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'withdrawals',
+            filter: `user_id=eq.${user?.id}`
+          },
+          (payload) => {
+            // Handle different types of changes
+            if (payload.eventType === 'INSERT') {
+              setWithdrawals(prev => [payload.new as any, ...prev].slice(0, 5));
+            } else if (payload.eventType === 'UPDATE') {
+              setWithdrawals(prev => 
+                prev.map(withdrawal => 
+                  withdrawal.id === payload.new.id ? payload.new as any : withdrawal
+                )
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setWithdrawals(prev => 
+                prev.filter(withdrawal => withdrawal.id !== payload.old.id)
+              );
+            }
+          }
+        )
+        .subscribe();
+
+        // Cleanup subscriptions
         return () => {
-          supabase.removeChannel(subscription);
+          supabase.removeChannel(activitiesSubscription);
+          supabase.removeChannel(withdrawalsSubscription);
         };
       }
     }, [user?.id, activeCard, currentTab]);
@@ -1900,7 +2092,8 @@ const handleDeposit = async (amount: number) => {
           .single();
 
         const now = Date.now();
-        const newRate = calculateEarningRate(user.balance, currentROI);
+        const daysStaked = serverData ? Math.floor((now - new Date(serverData.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+        const newRate = calculateEarningRateLegacy(user.balance, currentROI, daysStaked);
         
         // Load saved earnings from localStorage
         const savedEarnings = localStorage.getItem(getUserEarningsKey(user.id));
@@ -2049,7 +2242,12 @@ const handleDeposit = async (amount: number) => {
   ): number => {
     const timeDiff = currentTime - lastActiveTime;
     if (timeDiff < MINIMUM_OFFLINE_TIME) return 0;
-    return (baseRate * timeDiff) / 1000; // Convert to seconds
+    
+    // Ensure we're using sustainable rates (max 1% daily)
+    const maxSustainableRate = 0.01 / 86400; // 1% daily converted to per-second
+    const actualRate = Math.min(baseRate, maxSustainableRate);
+    
+    return (actualRate * timeDiff) / 1000; // Convert to seconds
   };
 
   // Update the offline earnings effect
@@ -2265,7 +2463,8 @@ const handleDeposit = async (amount: number) => {
           .single();
 
         const now = Date.now();
-        const newRate = calculateEarningRate(user.balance, currentROI);
+        const daysStaked = serverData ? Math.floor((now - new Date(serverData.start_date).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+        const newRate = calculateEarningRateLegacy(user.balance, currentROI, daysStaked);
         
         if (serverData) {
           // Existing user logic - preserve earnings on top-up
@@ -2333,6 +2532,9 @@ const handleDeposit = async (amount: number) => {
         const now = Date.now();
         const secondsElapsed = (now - prevState.lastUpdate) / 1000;
         
+        // Calculate days staked for time multiplier
+        const daysStaked = prevState.startDate ? Math.floor((now - prevState.startDate) / (1000 * 60 * 60 * 24)) : 0;
+        
         // Calculate new earnings based on current rate and elapsed time
         const newEarnings = prevState.currentEarnings + (prevState.baseEarningRate * secondsElapsed);
         
@@ -2340,7 +2542,7 @@ const handleDeposit = async (amount: number) => {
           ...prevState,
           lastUpdate: now,
           currentEarnings: newEarnings,
-          baseEarningRate: calculateEarningRate(user.balance, currentROI) // Update rate based on new balance
+          baseEarningRate: calculateEarningRateLegacy(user.balance, currentROI, daysStaked) // Update rate based on new balance and time
         };
         
         // Save to localStorage
@@ -2382,7 +2584,7 @@ const handleDeposit = async (amount: number) => {
       setEarningState({
         lastUpdate: Date.now(),
         currentEarnings: 0,
-        baseEarningRate: calculateEarningRate(totalAmount, currentROI),
+        baseEarningRate: calculateEarningRateLegacy(totalAmount, currentROI, 0), // Restake starts at day 0
         isActive: true,
         startDate: Date.now()
       });
@@ -2660,17 +2862,28 @@ const handleDeposit = async (amount: number) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {/* User Name */}
-                {/* <span className="text-xs text-slate-600 truncate max-w-[140px] font-medium">
-                  {user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Anonymous User' : 'Welcome'}
-                </span> */}
-                {/* {user?.rank && (
-                  <div className="bg-blue-100 px-2 py-0.5 rounded-full">
-                    <span className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">
-                      {user.rank}
-                    </span>
-                  </div>
-                )} */}
+                <button
+                  onClick={async () => {
+                    if (user?.telegram_id) {
+                      try {
+                        await navigator.clipboard.writeText(user.telegram_id.toString());
+                        showSnackbar({
+                          message: 'Telegram ID Copied!',
+                          description: 'Your Telegram ID has been copied to clipboard'
+                        });
+                      } catch (error) {
+                        showSnackbar({
+                          message: 'Copy Failed',
+                          description: 'Please try again or copy manually'
+                        });
+                      }
+                    }
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-700 truncate max-w-[140px] font-medium transition-colors cursor-pointer"
+                  title="Click to copy Telegram ID"
+                >
+                  {user?.telegram_id || 'Loading...'}
+                </button>
               </div>
             </div>
           </div>
@@ -2694,35 +2907,55 @@ const handleDeposit = async (amount: number) => {
       {/* Main Content Area */}
       <div className="flex-1">
         {currentTab === 'home' && (
-          <div className="space-y-4 px-4 pb-4 overflow-y-auto">
-        <div className="absolute inset-0 bg-slate-50" />
-
+          <div className="space-y-4  p-custom px-4 pb-4 overflow-y-auto">
            {/* <DailyUpdateCard earningState={earningState} /> */}
-
-
-            <ArcadeMiningUI
-              balanceTon={user?.balance ?? 0}
-              tonPrice={tonPrice}
-              currentEarningsTon={earningState.currentEarnings}
-              isClaiming={isClaimingEarnings}
-              claimCooldown={claimCooldown}
-              cooldownText={`Cooldown (${formatCooldownTime(claimCooldown)})`}
-              onClaim={handleClaimEarnings}
-              onOpenDeposit={() => setShowDepositModal(true)}
-              onOpenWithdraw={() => setShowWithdrawalModal(true)}
-              airdropBalanceNova={Number(user?.total_sbt ?? 0)}
-              potentialEarningsTon={Number(calculatePotentialEarnings(user?.balance ?? 0))}
-              totalWithdrawnTon={Number(user?.total_withdrawn ?? 0)}
-              activities={activities}
-              isLoadingActivities={isLoadingActivities}
-              userId={user?.id}
-              userUsername={user?.username}
-              referralCode={userReferralCode}
-            />
-
-
-         
-          </div>
+           {/* Estimated Daily Earnings */}
+           <DailyRewardCard
+                userId={user?.id}
+                variant="mini"
+                showSnackbar={showSnackbar}
+                onRewardClaimed={handleRewardClaimed}
+              />        
+            
+            {/* Show engagement component for non-staked users */}
+            {user && Number(user.balance ?? 0) === 0 ? (
+              <NonStakedEngagement
+                onStartStaking={() => setShowDepositModal(true)}
+                airdropBalance={Number(user?.total_sbt ?? 0)}
+                showSnackbar={showSnackbar}
+              />
+            ) : (
+              <ArcadeMiningUI
+                balanceTon={user?.balance ?? 0}
+                tonPrice={tonPrice}
+                currentEarningsTon={earningState.currentEarnings}
+                isClaiming={isClaimingEarnings}
+                claimCooldown={claimCooldown}
+                cooldownText={`Cooldown (${formatCooldownTime(claimCooldown)})`}
+                onClaim={handleClaimEarnings}
+                onOpenDeposit={() => setShowDepositModal(true)}
+                onOpenWithdraw={() => setShowWithdrawalModal(true)}
+                airdropBalanceNova={Number(user?.total_sbt ?? 0)}
+                potentialEarningsTon={Number(calculatePotentialEarnings(user?.balance ?? 0))}
+                totalWithdrawnTon={Number(user?.total_withdrawn ?? 0)}
+                activities={activities}
+                withdrawals={withdrawals}
+                isLoadingActivities={isLoadingActivities || isLoadingWithdrawals}
+                userId={user?.id}
+                showSnackbar={showSnackbar}
+                userUsername={user?.username}
+                referralCode={userReferralCode}
+                estimatedDailyTapps={estimatedDailyTapps}
+              />
+            )}
+            
+            <TwitterEngagementTask
+                userId={user?.id}
+                showSnackbar={showSnackbar}
+                onRewardClaimed={handleRewardClaimed}
+              />
+             
+          </div> 
         )}
 
         {currentTab === 'network' && (
@@ -2732,28 +2965,27 @@ const handleDeposit = async (amount: number) => {
           </div>
         )}
 
-        {currentTab === 'airdrop' && (
+
+        {currentTab === 'whale' && (
           <div className="flex-1 p-4 p-custom  sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
             <NewsComponent/>
           </div>
         )}
 
+
         {currentTab === 'tasks' && (
           <div className="flex-1 p-4 p-custom  sm:p-6 overflow-y-auto bg-slate-50">
             {/* Clean background */}
             {/* Content */}
-            <div className="relative">
+            <div className="relative space-y-6"> 
+             
+              
+              {/* Social Tasks */}
               <SocialTasks 
                 showSnackbar={showSnackbar}
                 userId={user?.id}
-                onRewardClaimed={(amount) => {
-                  // Refresh user data to update airdrop balance
-                  if (user?.id) {
-                    // You can add a refresh function here if needed
-                    console.log(`Reward claimed: ${amount} TAPPS`);
-                  }
-                }}
+                onRewardClaimed={handleRewardClaimed}
               />
             </div>
           </div>
@@ -2882,15 +3114,18 @@ const handleDeposit = async (amount: number) => {
 
        {/* Deposit Modal */}
        {showDepositModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-white w-full h-full max-w-none max-h-none shadow-2xl overflow-y-auto">
+            <div className="p-6 max-w-2xl mx-auto">
               {/* Header */}
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {user?.balance && user.balance > 0 ? 'Add new staking' : 'Deposit TON'}
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {user?.balance && user.balance > 0 ? 'Add New Staking' : 'Deposit TON'}
                   </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Stake TON to start earning TAPPS rewards
+                  </p>
                 </div>
                 <button
                   onClick={() => {
@@ -2915,14 +3150,21 @@ const handleDeposit = async (amount: number) => {
               ) : (
                 <>
                   {/* Amount Display */}
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-5xl font-bold text-gray-900">
+                  <div className="mb-8 text-center">
+                    <div className="flex items-baseline justify-center gap-2 mb-3">
+                      <span className="text-6xl font-bold text-gray-900">
                         {customAmount || '0'}
                       </span>
-                      <span className="text-2xl font-medium text-gray-500">TON</span>
+                      <span className="text-3xl font-medium text-gray-500">TON</span>
                     </div>
-                    {/* <p className="text-sm text-gray-400">≈ 0 USD = 0 BTN</p> */}
+                    <p className="text-lg text-gray-600 font-medium">
+                      ≈ {customAmount && parseFloat(customAmount) >= 1 
+                        ? calculateTotalEarnings(parseFloat(customAmount)).toFixed(1) 
+                        : '0'} TAPPS
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Potential earnings over 135 days
+                    </p>
                   </div>
 
                   {/* Quick Select Grid */}
@@ -2932,14 +3174,32 @@ const handleDeposit = async (amount: number) => {
                         key={amount}
                         onClick={() => {
                           setCustomAmount(amount.toString());
-                          handleDeposit(amount);
                         }}
-                        className="px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200
-                          rounded-lg transition-all duration-200 group"
+                        className={`px-3 py-3 border rounded-lg transition-all duration-200 text-center group
+                          ${customAmount === amount.toString() 
+                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                            : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700 hover:text-gray-900'
+                          }`}
                       >
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                          {amount} TON
-                        </span>
+                        <div className="space-y-1">
+                          <div className="text-sm font-semibold">
+                            {amount} TON
+                          </div>
+                          <div className={`text-xs font-medium ${
+                            customAmount === amount.toString() 
+                              ? 'text-blue-600' 
+                              : 'text-gray-500 group-hover:text-gray-600'
+                          }`}>
+                            ~{calculateTotalEarnings(amount).toFixed(1)} TAPPS
+                          </div>
+                          <div className={`text-xs ${
+                            customAmount === amount.toString() 
+                              ? 'text-blue-500' 
+                              : 'text-gray-400 group-hover:text-gray-500'
+                          }`}>
+                            {((calculateTotalEarnings(amount) / amount) * 100).toFixed(0)}% ROI
+                          </div>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -2975,7 +3235,7 @@ const handleDeposit = async (amount: number) => {
                     <span className="font-medium text-gray-900">1 TON</span>
                   </div>
 
-                  {/* Rewards Section */}
+                  {/* Simple Rewards Section */}
                   {customAmount && parseFloat(customAmount) >= 1 && (
                     <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
                       <div className="flex items-center gap-2 mb-3">
@@ -2983,32 +3243,42 @@ const handleDeposit = async (amount: number) => {
                           <span className="text-white text-xs font-bold">B</span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">Total Rewards</p>
+                          <p className="text-sm font-semibold text-gray-900">Potential Earnings</p>
                           <p className="text-xs text-gray-500">135 days</p>
                         </div>
                         <div className="ml-auto text-right">
-                          {/* <p className="text-sm font-bold text-gray-900">0 BTN</p> */}
+                          <p className="text-lg font-bold text-blue-600">
+                            {calculateTotalEarnings(parseFloat(customAmount)).toFixed(2)} TAPPS
+                          </p>
+                          <p className="text-xs text-green-600">
+                            {((calculateTotalEarnings(parseFloat(customAmount)) / parseFloat(customAmount)) * 100).toFixed(1)}% ROI
+                          </p>
                         </div>
                       </div>
 
                       <div className="space-y-2 pt-3 border-t border-gray-200">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Daily Earnings</span>
+                          <span className="text-gray-600">Daily (Day 1-7)</span>
                           <span className="text-green-600 font-medium">
-                            +{(parseFloat(customAmount) * currentROI).toFixed(6)} TAPPs/day
+                            +{(parseFloat(customAmount) * 0.0306).toFixed(4)} TAPPs
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">135-Day Profit</span>
+                          <span className="text-gray-600">Daily (Day 8-30)</span>
+                          <span className="text-yellow-600 font-medium">
+                            +{(parseFloat(customAmount) * 0.0306 * 1.1).toFixed(4)} TAPPs
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Daily (Day 31+)</span>
                           <span className="text-blue-600 font-medium">
-                            {(parseFloat(customAmount) + calculateTotalEarnings(parseFloat(customAmount))).toFixed(2)} TAPPS
+                            +{(parseFloat(customAmount) * 0.0306 * 1.25).toFixed(4)} TAPPs
                           </span>
                         </div>
                       </div>
 
                       <p className="text-xs text-gray-500 mt-3">
-                        The rewards is accrued in TAPPS tokens. The amount of rewards is approximate,
-                        subject to change due to exchange rates
+                        Rewards are accrued in TAPPS tokens. Amounts are approximate and subject to change.
                       </p>
                     </div>
                   )}
@@ -3162,18 +3432,18 @@ const handleDeposit = async (amount: number) => {
                 gradient: 'from-indigo-500 to-purple-500'
               },
               { 
+                id: 'whale', 
+                text: 'Airdrop', 
+                Icon: FaGem,
+                premium: true,
+                gradient: 'from-purple-500 to-pink-500'
+              },
+              { 
                 id: 'tasks', 
                 text: 'Bonus', 
                 Icon: FaTasks,
                 premium: false,
                 gradient: 'from-green-500 to-emerald-500'
-              },
-              { 
-                id: 'airdrop', 
-                text: 'Airdrop', 
-                Icon: FaGem,
-                premium: true,
-                gradient: 'from-purple-500 to-pink-500'
               },
               { 
                 id: 'token', 
@@ -3341,17 +3611,16 @@ const handleDeposit = async (amount: number) => {
 
 const calculateTotalEarnings = (amount: number): number => {
   let totalEarnings = 0;
-  let currentROI = 0.01; // Start at 1%
+  const baseROI = 0.0306; // 3.06% base daily rate for better returns
   
-  // Calculate earnings for each day up to 100 days
-  for (let day = 1; day <= 100; day++) {
-    // Update ROI every 5 days
-    if (day > 1 && day % 5 === 1) {
-      currentROI = Math.min(currentROI + 0.005, 0.11); // Increase by 0.5%, max 11%
-    }
+  // Calculate earnings for each day up to 135 days (lock period)
+  for (let day = 1; day <= 135; day++) {
+    // Get time multiplier based on days staked
+    const timeMultiplier = getTimeMultiplier(day);
     
-    // Add daily earnings
-    totalEarnings += amount * currentROI;
+    // Calculate daily earnings with time multiplier
+    const dailyEarnings = amount * baseROI * timeMultiplier;
+    totalEarnings += dailyEarnings;
   }
   
   return totalEarnings;

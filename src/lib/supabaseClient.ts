@@ -1177,6 +1177,333 @@ export const checkCycleCompletion = async (userId: number) => {
   }
 };
 
+// Weekly Withdrawal System Functions
+export const checkWeeklyWithdrawalEligibility = async (userId: number): Promise<{
+  canWithdraw: boolean;
+  nextWithdrawalDate: Date | null;
+  daysUntilWithdrawal: number;
+  hasPendingWithdrawal: boolean;
+  pendingWithdrawalId?: number;
+}> => {
+  try {
+    // Check for pending withdrawals first
+    const { data: pendingWithdrawals, error: pendingError } = await supabase
+      .from('withdrawals')
+      .select('id, created_at')
+      .eq('user_id', userId)
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (pendingError) throw pendingError;
+
+    // If there's a pending withdrawal, user cannot withdraw
+    if (pendingWithdrawals && pendingWithdrawals.length > 0) {
+      return {
+        canWithdraw: false,
+        nextWithdrawalDate: null,
+        daysUntilWithdrawal: 0,
+        hasPendingWithdrawal: true,
+        pendingWithdrawalId: pendingWithdrawals[0].id
+      };
+    }
+
+    // Check weekly withdrawal eligibility
+    const { data, error } = await supabase
+      .from('users')
+      .select('last_weekly_withdrawal')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+
+    const lastWithdrawal = data?.last_weekly_withdrawal;
+    const now = new Date();
+    
+    if (!lastWithdrawal) {
+      return {
+        canWithdraw: true,
+        nextWithdrawalDate: null,
+        daysUntilWithdrawal: 0,
+        hasPendingWithdrawal: false
+      };
+    }
+
+    const lastWithdrawalDate = new Date(lastWithdrawal);
+    const daysSinceWithdrawal = Math.floor((now.getTime() - lastWithdrawalDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysSinceWithdrawal >= 7) {
+      return {
+        canWithdraw: true,
+        nextWithdrawalDate: null,
+        daysUntilWithdrawal: 0,
+        hasPendingWithdrawal: false
+      };
+    } else {
+      const nextDate = new Date(lastWithdrawalDate);
+      nextDate.setDate(nextDate.getDate() + 7);
+      return {
+        canWithdraw: false,
+        nextWithdrawalDate: nextDate,
+        daysUntilWithdrawal: 7 - daysSinceWithdrawal,
+        hasPendingWithdrawal: false
+      };
+    }
+  } catch (error) {
+    console.error('Error checking weekly withdrawal eligibility:', error);
+    return {
+      canWithdraw: false,
+      nextWithdrawalDate: null,
+      daysUntilWithdrawal: 0,
+      hasPendingWithdrawal: false
+    };
+  }
+};
+
+export const processWeeklyWithdrawal = async (userId: number, amount: number, _walletAddress: string): Promise<{
+  success: boolean;
+  error?: string;
+}> => {
+  try {
+    // Check eligibility first
+    const eligibility = await checkWeeklyWithdrawalEligibility(userId);
+    if (!eligibility.canWithdraw) {
+      if (eligibility.hasPendingWithdrawal) {
+        return {
+          success: false,
+          error: 'You have a pending withdrawal request. Please wait for it to be processed before making another request.'
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Weekly withdrawal cooldown active. Please wait until next withdrawal date.'
+        };
+      }
+    }
+
+    // Validate minimum withdrawal
+    if (amount < 1) {
+      return {
+        success: false,
+        error: 'Minimum withdrawal amount is 1 TAPPS'
+      };
+    }
+
+    // Get user's current claimable balance (total_withdrawn)
+    const { data: user } = await supabase
+      .from('users')
+      .select('total_withdrawn')
+      .eq('id', userId)
+      .single();
+
+    if (!user || user.total_withdrawn < amount) {
+      return {
+        success: false,
+        error: 'Insufficient claimable balance'
+      };
+    }
+
+    // Create withdrawal request
+    const { error: withdrawError } = await supabase
+      .from('withdrawals')
+      .insert({
+        user_id: userId,
+        amount: amount,
+        wallet_amount: amount,
+        status: 'PENDING',
+        created_at: new Date().toISOString()
+      });
+
+    if (withdrawError) throw withdrawError;
+
+    // Update weekly withdrawal tracking
+    const { error: updateError } = await supabase.rpc('update_weekly_withdrawal_tracking', {
+      user_id_param: userId,
+      withdrawal_amount: amount
+    });
+
+    if (updateError) {
+      console.error('Error updating weekly withdrawal tracking:', updateError);
+      // Don't fail the withdrawal if tracking update fails
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error processing weekly withdrawal:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to process withdrawal'
+    };
+  }
+};
+
+// Function to approve a withdrawal and subtract from claimable balance
+export const approveWithdrawal = async (withdrawalId: number): Promise<{
+  success: boolean;
+  error?: string;
+}> => {
+  try {
+    // Get withdrawal details
+    const { data: withdrawal, error: fetchError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('id', withdrawalId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!withdrawal) {
+      return { success: false, error: 'Withdrawal not found' };
+    }
+
+    if (withdrawal.status !== 'PENDING') {
+      return { success: false, error: 'Withdrawal is not pending' };
+    }
+
+    // Update withdrawal status to COMPLETED
+    const { error: updateError } = await supabase
+      .from('withdrawals')
+      .update({
+        status: 'COMPLETED',
+        processed_at: new Date().toISOString()
+      })
+      .eq('id', withdrawalId);
+
+    if (updateError) throw updateError;
+
+    // Subtract from user's available earnings (claimable balance) and add to total_payout
+    const { error: balanceError } = await supabase.rpc('update_user_balance_after_withdrawal', {
+      user_id: withdrawal.user_id,
+      withdrawal_amount: withdrawal.amount
+    });
+
+    if (balanceError) {
+      console.error('Error updating user balance:', balanceError);
+      // Revert withdrawal status if balance update fails
+      await supabase
+        .from('withdrawals')
+        .update({ status: 'PENDING' })
+        .eq('id', withdrawalId);
+      
+      return { success: false, error: 'Failed to update user balance' };
+    }
+
+    // Create activity record for the withdrawal
+    await supabase
+      .from('activities')
+      .insert({
+        user_id: withdrawal.user_id,
+        type: 'withdrawal',
+        amount: withdrawal.amount,
+        status: 'COMPLETED',
+        created_at: new Date().toISOString()
+      });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error approving withdrawal:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to approve withdrawal'
+    };
+  }
+};
+
+// Function to reject a withdrawal
+export const rejectWithdrawal = async (withdrawalId: number, _reason?: string): Promise<{
+  success: boolean;
+  error?: string;
+}> => {
+  try {
+    const { error } = await supabase
+      .from('withdrawals')
+      .update({
+        status: 'FAILED',
+        processed_at: new Date().toISOString()
+      })
+      .eq('id', withdrawalId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error rejecting withdrawal:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to reject withdrawal'
+    };
+  }
+};
+
+// Get user payout statistics
+export const getUserPayoutStats = async (userId: number): Promise<{
+  totalPayout: number;
+  totalWithdrawn: number;
+  pendingWithdrawals: number;
+  lastPayoutDate: string | null;
+}> => {
+  try {
+    const { data, error } = await supabase.rpc('get_user_payout_stats', {
+      user_id_param: userId
+    });
+
+    if (error) throw error;
+
+    const stats = data?.[0] || {
+      total_payout: 0,
+      total_withdrawn: 0,
+      pending_withdrawals: 0,
+      last_payout_date: null
+    };
+
+    return {
+      totalPayout: Number(stats.total_payout) || 0,
+      totalWithdrawn: Number(stats.total_withdrawn) || 0,
+      pendingWithdrawals: Number(stats.pending_withdrawals) || 0,
+      lastPayoutDate: stats.last_payout_date
+    };
+  } catch (error: any) {
+    console.error('Error getting user payout stats:', error);
+    return {
+      totalPayout: 0,
+      totalWithdrawn: 0,
+      pendingWithdrawals: 0,
+      lastPayoutDate: null
+    };
+  }
+};
+
+// Get platform payout statistics
+export const getPlatformPayoutStats = async (): Promise<{
+  totalPlatformPayouts: number;
+  totalPendingWithdrawals: number;
+  totalUsersWithPayouts: number;
+}> => {
+  try {
+    const { data, error } = await supabase.rpc('get_platform_payout_stats');
+
+    if (error) throw error;
+
+    const stats = data?.[0] || {
+      total_platform_payouts: 0,
+      total_pending_withdrawals: 0,
+      total_users_with_payouts: 0
+    };
+
+    return {
+      totalPlatformPayouts: Number(stats.total_platform_payouts) || 0,
+      totalPendingWithdrawals: Number(stats.total_pending_withdrawals) || 0,
+      totalUsersWithPayouts: Number(stats.total_users_with_payouts) || 0
+    };
+  } catch (error: any) {
+    console.error('Error getting platform payout stats:', error);
+    return {
+      totalPlatformPayouts: 0,
+      totalPendingWithdrawals: 0,
+      totalUsersWithPayouts: 0
+    };
+  }
+};
+
 export const distributeGLPRewards = async () => {
   try {
     const { data: poolData } = await supabase

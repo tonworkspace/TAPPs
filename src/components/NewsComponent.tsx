@@ -238,7 +238,7 @@ const NewsComponent: React.FC = () => {
               <h4 className="text-sm font-semibold text-slate-900 mb-3">Token Specifications</h4>
               <div className="space-y-3">
                 <div className="p-3 bg-white rounded-lg border">
-                  <div className="text-lg font-bold text-slate-900">1,000,000,000,000</div>
+                  <div className="text-lg font-bold text-slate-900">TBA</div>
                   <div className="text-xs text-slate-600">Total Supply</div>
                 </div>
                 <div className="p-3 bg-white rounded-lg border">
@@ -246,7 +246,7 @@ const NewsComponent: React.FC = () => {
                   <div className="text-xs text-slate-600">Token Symbol</div>
                 </div>
                 <div className="p-3 bg-white rounded-lg border">
-                  <div className="text-lg font-bold text-slate-900">18</div>
+                  <div className="text-lg font-bold text-slate-900">9</div>
                   <div className="text-xs text-slate-600">Decimals</div>
                 </div>
                 <div className="p-3 bg-white rounded-lg border">

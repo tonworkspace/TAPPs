@@ -421,9 +421,16 @@ export const useAuth = () => {
         // Remove referrer property to avoid issues with the update
         const { referrer, ...dataToUpdate } = updatedData;
 
+        // Map camelCase client fields to snake_case DB columns
+        const payload: Record<string, any> = { ...dataToUpdate };
+        if (Object.prototype.hasOwnProperty.call(payload, 'lastUpdate')) {
+          payload.last_update = payload.lastUpdate;
+          delete payload.lastUpdate;
+        }
+
         const { data: updatedUser, error } = await supabase
           .from('users')
-          .update(dataToUpdate)
+          .update(payload)
           .eq('id', user.id)
           .select('*')
           .single();

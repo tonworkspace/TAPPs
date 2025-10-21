@@ -71,6 +71,17 @@ interface TreeUser {
   is_premium: boolean;
 }
 
+// Daily reward status interface
+interface DailyRewardStatus {
+  can_claim: boolean;
+  current_streak: number;
+  longest_streak: number;
+  total_days_claimed: number;
+  next_claim_time: string;
+  last_claim_date: string | null;
+  next_reward_amount: number;
+}
+
 interface TreeData {
   upline: TreeUser | null;
   downline: TreeUser[];
@@ -133,6 +144,11 @@ const ReferralSystem = () => {
   // Add new state for active referral rewards
   const [activeReferralReward, setActiveReferralReward] = useState<number>(0);
 
+  // Add daily reward state
+  const [dailyRewardStatus, setDailyRewardStatus] = useState<DailyRewardStatus | null>(null);
+  const [isClaimingDaily, setIsClaimingDaily] = useState(false);
+  const [timeUntilNext, setTimeUntilNext] = useState<string>('');
+
   const [tree, setTree] = useState<TreeData>({ upline: null, downline: [] });
 
   const [isTreeLoading, setIsTreeLoading] = useState(false);
@@ -152,9 +168,88 @@ const ReferralSystem = () => {
     }
   };
 
+  // Load daily reward status
+  const loadDailyRewardStatus = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('get_daily_reward_status', {
+        p_user_id: user.id
+      });
+      
+      if (error) {
+        console.error('Error loading daily reward status:', error);
+        return;
+      }
+      
+      setDailyRewardStatus(data);
+    } catch (error) {
+      console.error('Error loading daily reward status:', error);
+    }
+  };
+
+  // Handle daily reward claim
+  const handleDailyRewardClaim = async () => {
+    if (!user?.id || isClaimingDaily || !dailyRewardStatus?.can_claim) return;
+
+    setIsClaimingDaily(true);
+    try {
+      const { data, error } = await supabase.rpc('claim_daily_reward', {
+        p_user_id: user.id
+      });
+
+      if (error) {
+        console.error('Error claiming daily reward:', error);
+        return;
+      }
+
+      if (data.success) {
+        // Reload daily reward status
+        await loadDailyRewardStatus();
+        
+        // Show success message (you can add a snackbar here)
+        console.log(`Daily reward claimed: ${data.reward_amount} TAPPS! Streak: ${data.streak_count} days`);
+        
+        // You can add a success notification here
+        // showSnackbar?.({ message: '🎉 Daily Reward Claimed!', description: `You earned ${data.reward_amount.toLocaleString()} TAPPS! Streak: ${data.streak_count} days` });
+      }
+    } catch (error) {
+      console.error('Error claiming daily reward:', error);
+    } finally {
+      setIsClaimingDaily(false);
+    }
+  };
+
   useEffect(() => {
     loadTree();
+    loadDailyRewardStatus();
   }, [user?.id]);
+
+  // Update countdown timer for daily rewards
+  useEffect(() => {
+    if (!dailyRewardStatus?.next_claim_time) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const nextClaim = new Date(dailyRewardStatus.next_claim_time);
+      const diff = nextClaim.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeUntilNext('Ready to claim!');
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeUntilNext(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [dailyRewardStatus?.next_claim_time]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -747,6 +842,93 @@ const ReferralSystem = () => {
                 <div className="text-sm text-slate-700">From team rewards</div>
               </div>
             </div>
+          </div>
+
+          {/* Daily Rewards Section */}
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900 mb-4">🎁 Daily Rewards</h2>
+            {dailyRewardStatus ? (
+              <div className="space-y-4">
+                {/* Daily Reward Card */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-sm">
+                        <span className="text-lg">🎁</span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-900">Daily TAPPS Bonus</div>
+                        <div className="text-xs text-slate-600">
+                          {dailyRewardStatus.current_streak > 0 ? 
+                            `🔥 ${dailyRewardStatus.current_streak} day streak` : 
+                            'Start your streak today!'
+                          }
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-slate-900">
+                        {dailyRewardStatus.can_claim ? 
+                          dailyRewardStatus.next_reward_amount.toLocaleString() : 
+                          '1,000'
+                        }
+                      </div>
+                      <div className="text-xs text-blue-600 font-semibold">TAPPS</div>
+                    </div>
+                  </div>
+                  
+                  {dailyRewardStatus.can_claim ? (
+                    <button
+                      onClick={handleDailyRewardClaim}
+                      disabled={isClaimingDaily}
+                      className="w-full py-2.5 px-4 rounded-lg font-bold text-white transition-all duration-200 transform hover:scale-105 active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                      {isClaimingDaily ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Claiming...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2">
+                          <span>🎁</span>
+                          <span>CLAIM DAILY REWARD</span>
+                          <span>🎁</span>
+                        </div>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="w-full py-2.5 px-4 rounded-lg bg-slate-100 border border-slate-200">
+                      <div className="text-center">
+                        <div className="text-xs font-semibold text-slate-600 mb-1">Next Reward In:</div>
+                        <div className="text-sm font-bold text-slate-900 font-mono">{timeUntilNext}</div>
+                        <div className="text-xs text-slate-500">Continue your streak!</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Streak Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center">
+                    <div className="text-xs text-slate-500 font-semibold uppercase">Best Streak</div>
+                    <div className="text-sm font-bold text-orange-600">{dailyRewardStatus.longest_streak}</div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center">
+                    <div className="text-xs text-slate-500 font-semibold uppercase">Total Days</div>
+                    <div className="text-sm font-bold text-blue-600">{dailyRewardStatus.total_days_claimed}</div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 text-center">
+                    <div className="text-xs text-slate-500 font-semibold uppercase">Days Left</div>
+                    <div className="text-sm font-bold text-purple-600">{30 - dailyRewardStatus.total_days_claimed}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <div className="text-sm text-slate-600">Loading daily rewards...</div>
+              </div>
+            )}
           </div>
 
           {/* Network Section */}
